@@ -602,4 +602,66 @@ public class ChatLauncher extends JFrame implements ChatObserver {
             e.printStackTrace();
         }
     }
+    /**
+     * Load messages for the selected user or group.
+     */
+    private void loadMessages() {
+        try {
+            if (isGroupSelected && selectedGroup != null) {
+                if (selectedGroup.equals("All Groups")) {
+                    // Handle the "All Groups" case
+                    loadAllGroupMessages();
+                    return;
+                }
+
+                // Check if we already have a chat area for this group
+                if (!chatAreas.containsKey(selectedGroup)) {
+                    // Create a new chat area for this group
+                    JEditorPane groupChatArea = new JEditorPane("text/html", "");
+                    groupChatArea.setEditable(false);
+                    groupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                    groupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                    groupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                    // Create a scroll pane for the chat area
+                    JScrollPane scrollPane = new JScrollPane(groupChatArea);
+                    scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                    // Add to the card panel
+                    chatCardPanel.add(scrollPane, selectedGroup);
+
+                    // Store in the map
+                    chatAreas.put(selectedGroup, groupChatArea);
+                }
+
+                // Show the chat area for this group
+                CardLayout cardLayout = (CardLayout) chatCardPanel.getLayout();
+                cardLayout.show(chatCardPanel, selectedGroup);
+
+                // Get the chat area for this group
+                JEditorPane currentChatArea = chatAreas.get(selectedGroup);
+                currentChatArea.setText("");
+
+                // Load group messages
+                List<ChatMsg> messages = chatService.getGroupMessages(selectedGroup);
+                displayMessages(messages, currentChatArea);
+            } else if (!isGroupSelected && selectedUser != null) {
+                // For direct messages, use the default chat area
+                chatArea.setText("");
+                CardLayout cardLayout = (CardLayout) chatCardPanel.getLayout();
+                cardLayout.show(chatCardPanel, "default");
+
+                // Load direct messages
+                List<ChatMsg> messages = chatService.getMessages(currentUser.getUsername(), selectedUser);
+                displayMessages(messages, chatArea);
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading messages: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
 
