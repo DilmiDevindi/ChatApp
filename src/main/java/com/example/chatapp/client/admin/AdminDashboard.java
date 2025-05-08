@@ -659,3 +659,97 @@ public class AdminDashboard extends JFrame {
             }
         }
     }
+
+    /**
+     * Add a user to the selected chat.
+     */
+    private void addUserToSelectedChat() {
+        int selectedRow = chatTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a chat group.",
+                    "No Chat Selected",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String chatName = (String) chatTableModel.getValueAt(selectedRow, 1);
+
+        // Show dialog to get username
+        String username = JOptionPane.showInputDialog(this,
+                "Enter the username to add to chat '" + chatName + "':",
+                "Add User to Chat",
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (username != null && !username.trim().isEmpty()) {
+            username = username.trim();
+            try {
+                boolean success = chatService.addUserToGroup(chatName, username);
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                            "User '" + username + "' added to chat '" + chatName + "' successfully.",
+                            "User Added",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadChats(); // Refresh the chat list
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to add user to chat. The user may not exist or is already a member.",
+                            "Operation Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (RemoteException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error adding user to chat: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Remove a user from the selected chat.
+     */
+    private void removeUserFromSelectedChat() {
+        int selectedRow = chatTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a chat group.",
+                    "No Chat Selected",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String chatName = (String) chatTableModel.getValueAt(selectedRow, 1);
+
+        // Show dialog to get username
+        String username = JOptionPane.showInputDialog(this,
+                "Enter the username to remove from chat '" + chatName + "':",
+                "Remove User from Chat",
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (username != null && !username.trim().isEmpty()) {
+            username = username.trim();
+            try {
+                boolean success = chatService.removeUserFromGroup(chatName, username);
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                            "User '" + username + "' removed from chat '" + chatName + "' successfully.",
+                            "User Removed",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadChats(); // Refresh the chat list
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to remove user from chat. The user may not exist or is not a member.",
+                            "Operation Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (RemoteException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error removing user from chat: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
