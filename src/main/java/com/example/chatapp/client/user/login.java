@@ -14,4 +14,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+/**
+ * Login interface for the chat application.
+ * Allows users to log in or navigate to registration.
+ */
+public class Login extends JFrame {}
+
 
