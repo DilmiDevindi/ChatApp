@@ -111,7 +111,43 @@ public class Login extends JFrame {
     /**
      * Attempt to log in with the provided credentials.
      */
-    private void login() {}
+    private void login() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword());
+
+        System.out.println("Login attempt from client: username=" + username);
+
+        if (username.isEmpty() || password.isEmpty()) {
+            statusLabel.setText("Username and password are required");
+            System.out.println("Login failed: Username or password is empty");
+            return;
+        }
+
+        // Check if server is running, start it if not
+        System.out.println("Checking if server is running...");
+        if (!ensureServerRunning()) {
+            statusLabel.setText("Could not connect to server. Please try again later.");
+            System.out.println("Login failed: Could not connect to server");
+            return;
+        }
+        System.out.println("Server is running");
+
+        try {
+            System.out.println("Getting registry...");
+            Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+            System.out.println("Looking up UserService...");
+            UserService userService = (UserService) registry.lookup(USER_SERVICE_NAME);
+            System.out.println("UserService found, calling login...");
+
+            // Clear any previous login status
+            System.out.println("Attempting login for: " + username);
+            ChatUser user = userService.login(username, password);
+            System.out.println("Login result: " + (user != null ? "Success" : "Failed"));
+
+            if (user != null) {
+                System.out.println("User details: username=" + user.getUsername() + ", isAdmin=" + user.isAdmin());
+                dispose(); // Close login window
+    }
 }
 
 
