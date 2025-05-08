@@ -95,3 +95,110 @@ public class AdminDashboard extends JFrame {
             e.printStackTrace();
             System.exit(1);
         }
+
+        // Set up UI components
+        initializeUI();
+
+        // Load initial data
+        loadUsers();
+        loadLogs();
+
+        // Add window closing handler
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                logout();
+            }
+        });
+    }
+
+    /**
+     * Initialize the UI components.
+     */
+    private void initializeUI() {
+        // Define colors for a consistent theme
+        Color primaryColor = new Color(52, 73, 85);     // Dark blue-gray
+        Color secondaryColor = new Color(249, 170, 51); // Orange
+        Color backgroundColor = new Color(232, 237, 241); // Light gray-blue
+        Color textColor = new Color(35, 47, 52);        // Dark gray
+        Color buttonColor = new Color(74, 101, 114);    // Medium blue-gray
+
+        // Main panel with border layout
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(backgroundColor);
+
+        // Create header panel with gradient
+        JPanel headerPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, primaryColor, 0, h, buttonColor);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, w, h);
+            }
+        };
+        headerPanel.setPreferredSize(new Dimension(900, 60));
+        headerPanel.setLayout(new BorderLayout());
+
+        // Add title to header
+        JLabel titleLabel = new JLabel("Admin Dashboard - " + adminUser.getUsername(), JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+
+        // Top panel for logout (inside header)
+        JPanel logoutPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        logoutPanel.setOpaque(false);
+        logoutButton = new JButton("Logout");
+        logoutButton.setFont(new Font("Arial", Font.BOLD, 14));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setBackground(secondaryColor);
+        logoutButton.setFocusPainted(false);
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+        logoutPanel.add(logoutButton);
+        headerPanel.add(logoutPanel, BorderLayout.EAST);
+
+        // Create tabbed pane with custom styling
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
+        tabbedPane.setBackground(backgroundColor);
+        tabbedPane.setForeground(textColor);
+
+        // User management tab
+        JPanel userPanel = createUserPanel();
+        tabbedPane.addTab("User Management", userPanel);
+
+        // Chat management tab
+        JPanel chatPanel = createChatPanel();
+        tabbedPane.addTab("Chat Management", chatPanel);
+
+        // Logs tab
+        JPanel logPanel = createLogPanel();
+        tabbedPane.addTab("System Logs", logPanel);
+
+        // Add a footer
+        JPanel footerPanel = new JPanel();
+        footerPanel.setBackground(primaryColor);
+        footerPanel.setPreferredSize(new Dimension(900, 30));
+
+        // Add components to main panel
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        mainPanel.add(footerPanel, BorderLayout.SOUTH);
+
+        // Add main panel to frame
+        add(mainPanel);
+
+        // Add action listeners
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logout();
+            }
+        });
+    }
+
