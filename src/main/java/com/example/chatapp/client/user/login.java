@@ -268,6 +268,16 @@ public class Login extends JFrame {
             return false;
         }
     }
+
+    /**
+     * Open the registration form.
+     */
+    private void openRegisterForm() {
+        dispose(); // Close login window
+        SwingUtilities.invokeLater(() -> {
+            new Register().setVisible(true);
+        });
+    }
 }
 
 
