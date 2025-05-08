@@ -22,3 +22,28 @@ public class HibernateUtil {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Get the session factory.
+     *
+     * @return The session factory
+     */
+    public static SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    /**
+     * Open a new session.
+     *
+     * @return A new session, or null if the factory is not available
+     */
+    public static Session openSession() {
+        if (sessionFactory != null) {
+            return sessionFactory.openSession();
+        } else {
+            System.err.println("Cannot open session: session factory is null");
+            return null;
+        }
+    }
+}
+
