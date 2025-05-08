@@ -34,4 +34,13 @@ public class ChatUser implements Serializable {
     // Default constructor required by Hibernate
     public ChatUser() {
     }
+
+    public ChatUser(String username, String password, String email, String nickName, String profilePicture, boolean isAdmin) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.nickName = nickName;
+        this.profilePicture = profilePicture;
+        this.isAdmin = isAdmin;
+    }
 }
