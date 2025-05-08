@@ -43,4 +43,11 @@ public class ChatUser implements Serializable {
         this.profilePicture = profilePicture;
         this.isAdmin = isAdmin;
     }
+
+    public ChatUser(String username, String password, String email, boolean isAdmin) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.isAdmin = isAdmin;
+    }
 }
