@@ -147,7 +147,24 @@ public class Login extends JFrame {
             if (user != null) {
                 System.out.println("User details: username=" + user.getUsername() + ", isAdmin=" + user.isAdmin());
                 dispose(); // Close login window
-    }
+
+                if (user.isAdmin()) {
+                    System.out.println("Opening AdminDashboard for admin user");
+                    // Open admin dashboard
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            AdminDashboard dashboard = new AdminDashboard(user);
+                            dashboard.setVisible(true);
+                            System.out.println("Admin dashboard opened successfully");
+                        } catch (Exception e) {
+                            System.err.println("Error opening admin dashboard: " + e.getMessage());
+                            e.printStackTrace();
+                            // If admin dashboard fails to open, show login again
+                            new Login().setVisible(true);
+                        }
+                    });
+                }
+            }
 }
 
 
