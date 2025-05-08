@@ -106,7 +106,15 @@ public class Login extends JFrame {
                 openRegisterForm();
             }
         });
+    }
+
+    /**
+     * Attempt to log in with the provided credentials.
+     */
+    private void login() {}
 }
+
+
 
 
 
