@@ -1404,6 +1404,123 @@ public class ChatLauncher extends JFrame implements ChatObserver {
     }
 
 
+    /**
+     * Join a group.
+     */
+    private void joinGroup() {
+        try {
+            // Get all available groups
+            List<ChatGrp> allGroups = chatService.getAllGroups();
+
+            // Filter out groups the user is already a member of
+            List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+            List<String> userGroupNames = userGroups.stream()
+                    .map(ChatGrp::getName)
+                    .toList();
+
+            List<String> availableGroups = allGroups.stream()
+                    .map(ChatGrp::getName)
+                    .filter(name -> !userGroupNames.contains(name))
+                    .toList();
+
+            if (availableGroups.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "No available groups to join.",
+                        "Join Group",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Show dialog to select a group
+            String selectedGroup = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Select a group to join:",
+                    "Join Group",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    availableGroups.toArray(),
+                    availableGroups.get(0)
+            );
+
+            if (selectedGroup != null) {
+                // Check if the user is subscribed to the group creator
+                ChatGrp group = allGroups.stream()
+                        .filter(g -> g.getName().equals(selectedGroup))
+                        .findFirst()
+                        .orElse(null);
+
+                if (group != null) {
+                    try {
+                        // No subscription check needed - all users can join any group
+                        // This allows for true group chat functionality where any user can join any group
+
+                        boolean success = chatService.addUserToGroup(selectedGroup, currentUser.getUsername());
+                        if (success) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Successfully joined group: " + selectedGroup,
+                                    "Join Group",
+                                    JOptionPane.INFORMATION_MESSAGE);
+
+                            // Notify all users in the group that this user has joined
+                            chatService.notifyUserJoined(selectedGroup, currentUser.getUsername(),
+                                    currentUser.getNickName() != null ? currentUser.getNickName() : currentUser.getUsername(),
+                                    new Date());
+
+                            // Create a chat area for this group if it doesn't exist
+                            if (!chatAreas.containsKey(selectedGroup)) {
+                                // Create a new chat area for this group
+                                JEditorPane groupChatArea = new JEditorPane("text/html", "");
+                                groupChatArea.setEditable(false);
+                                groupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                                groupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                                groupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                                // Create a scroll pane for the chat area
+                                JScrollPane scrollPane = new JScrollPane(groupChatArea);
+                                scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                                // Add to the card panel
+                                chatCardPanel.add(scrollPane, selectedGroup);
+
+                                // Store in the map
+                                chatAreas.put(selectedGroup, groupChatArea);
+
+                                // Load messages for this group
+                                List<ChatMsg> messages = chatService.getGroupMessages(selectedGroup);
+                                displayMessages(messages, groupChatArea);
+                            }
+
+                            loadGroups();
+                        } else {
+                            JOptionPane.showMessageDialog(this,
+                                    "Failed to join group: " + selectedGroup,
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (RemoteException e) {
+                        JOptionPane.showMessageDialog(this,
+                                "Error joining group: " + e.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        e.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to find group: " + selectedGroup,
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error joining group: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 
