@@ -5,5 +5,5 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "chat_users")
-public class chatUser {
+public class ChatUser implements Serializable {
 }
