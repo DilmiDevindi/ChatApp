@@ -753,3 +753,96 @@ public class AdminDashboard extends JFrame {
             }
         }
     }
+    /**
+     * Remove the selected user from the application.
+     */
+    private void removeSelectedUser() {
+        int selectedRow = userTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a user to remove.",
+                    "No User Selected",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String username = (String) userTableModel.getValueAt(selectedRow, 1);
+        String isAdmin = (String) userTableModel.getValueAt(selectedRow, 3);
+
+        // Cannot remove admin users
+        if (isAdmin.equals("Yes")) {
+            JOptionPane.showMessageDialog(this,
+                    "Cannot remove admin users.",
+                    "Operation Not Allowed",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Confirm removal
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to remove user '" + username + "'? This action cannot be undone.",
+                "Confirm User Removal",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean success = userService.removeUser(adminUser.getUsername(), username);
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                            "User '" + username + "' has been removed successfully.",
+                            "User Removed",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadUsers(); // Refresh the user list
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to remove user '" + username + "'.",
+                            "Operation Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (RemoteException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error removing user: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Log out and close the application.
+     */
+    private void logout() {
+        try {
+            // Logout user
+            boolean logoutSuccess = userService.logout(adminUser.getUsername());
+            System.out.println("Logout success for admin user: " + logoutSuccess);
+
+            // Ensure all resources are released
+            userService = null;
+            logService = null;
+            chatService = null;
+
+            // Close window and return to login
+            dispose();
+
+            // Use a small delay to ensure resources are properly released
+            Timer timer = new Timer(100, e -> {
+                SwingUtilities.invokeLater(() -> {
+                    Login loginForm = new Login();
+                    loginForm.setVisible(true);
+                });
+            });
+            timer.setRepeats(false);
+            timer.start();
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error during logout: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+}
