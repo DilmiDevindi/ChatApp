@@ -91,6 +91,15 @@ public class Login extends JFrame {
         panel.add(statusLabel, gbc);
 
         add(panel);
+
+        // Add action listeners
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                login();
+            }
+        });
 }
+
 
 
