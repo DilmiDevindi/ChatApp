@@ -18,6 +18,16 @@ import java.rmi.registry.Registry;
  * Login interface for the chat application.
  * Allows users to log in or navigate to registration.
  */
-public class Login extends JFrame {}
+public class Login extends JFrame {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
+    private JButton registerButton;
+    private JLabel statusLabel;
+
+    private static final String USER_SERVICE_NAME = "UserService";
+    private static final int RMI_PORT = 1099;
+    private static final String RMI_HOST = "localhost";
+}
 
 
