@@ -153,3 +153,17 @@ import java.util.Date;
             this.filePath = filePath;
         }
 
+        @Override
+        public String toString() {
+            return "ChatLogs{" +
+                    "id=" + id +
+                    ", user=" + (user != null ? user.getUsername() : "null") +
+                    ", action='" + action + '\'' +
+                    ", timestamp=" + timestamp +
+                    ", ipAddress='" + ipAddress + '\'' +
+                    ", details='" + details + '\'' +
+                    ", chatId='" + chatId + '\'' +
+                    ", filePath='" + filePath + '\'' +
+                    '}';
+        }
+    }
