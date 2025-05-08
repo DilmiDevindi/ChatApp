@@ -1520,6 +1520,61 @@ public class ChatLauncher extends JFrame implements ChatObserver {
         }
     }
 
+    /**
+     * Leave a group.
+     */
+    private void leaveGroup() {
+        try {
+            // Get groups the user is a member of
+            List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+
+            if (userGroups.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "You are not a member of any groups.",
+                        "Leave Group",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            List<String> userGroupNames = userGroups.stream()
+                    .map(ChatGrp::getName)
+                    .toList();
+
+            // Show dialog to select a group
+            String selectedGroup = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Select a group to leave:",
+                    "Leave Group",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    userGroupNames.toArray(),
+                    userGroupNames.get(0)
+            );
+
+            if (selectedGroup != null) {
+                boolean success = chatService.removeUserFromGroup(selectedGroup, currentUser.getUsername());
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                            "Successfully left group: " + selectedGroup,
+                            "Leave Group",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadGroups();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to leave group: " + selectedGroup,
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error leaving group: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
 
 
 
