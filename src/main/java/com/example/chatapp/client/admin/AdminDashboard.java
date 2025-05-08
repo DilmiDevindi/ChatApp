@@ -539,3 +539,123 @@ public class AdminDashboard extends JFrame {
             e.printStackTrace();
         }
     }
+
+
+    /**
+     * Clear all system logs.
+     */
+    private void clearLogs() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to clear all logs? This action cannot be undone.",
+                "Confirm Clear Logs",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean success = logService.clearLogs();
+                if (success) {
+                    JOptionPane.showMessageDialog(this,
+                            "Logs cleared successfully",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    loadLogs();
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to clear logs",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (RemoteException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error clearing logs: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Load the list of chat groups.
+     */
+    private void loadChats() {
+        try {
+            List<ChatGrp> chats = chatService.getAllGroups();
+
+            // Clear table
+            chatTableModel.setRowCount(0);
+
+            // Add chats to table
+            for (ChatGrp chat : chats) {
+                Object[] row = {
+                        chat.getId(),
+                        chat.getName(),
+                        chat.getDescription(),
+                        chat.getCreator().getUsername(),
+                        chat.getMembers().size()
+                };
+                chatTableModel.addRow(row);
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading chats: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Create a new chat group.
+     */
+    private void createNewChat() {
+        // Show dialog to get chat details
+        JTextField nameField = new JTextField();
+        JTextField descriptionField = new JTextField();
+
+        Object[] message = {
+                "Chat Name:", nameField,
+                "Description:", descriptionField
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Create New Chat", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            String name = nameField.getText().trim();
+            String description = descriptionField.getText().trim();
+
+            if (name.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Chat name cannot be empty.",
+                        "Invalid Input",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                ChatGrp chat = chatService.createGroup(name, description, adminUser.getUsername());
+                if (chat != null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Chat '" + name + "' created successfully.",
+                            "Chat Created",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                    // Notify all subscribed and online users that the chat has started
+                    chatService.notifyChatStarted(name, chat.getCreatedDate());
+
+                    loadChats(); // Refresh the chat list
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to create chat. The chat name may already be in use.",
+                            "Operation Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (RemoteException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error creating chat: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
