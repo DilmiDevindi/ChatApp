@@ -663,5 +663,62 @@ public class ChatLauncher extends JFrame implements ChatObserver {
             e.printStackTrace();
         }
     }
+    /**
+     * Load messages from all groups the user is a member of.
+     */
+    private void loadAllGroupMessages() {
+        try {
+            // Check if we already have a chat area for "All Groups"
+            if (!chatAreas.containsKey("All Groups")) {
+                // Create a new chat area for all groups
+                allGroupsChatArea = new JEditorPane("text/html", "");
+                allGroupsChatArea.setEditable(false);
+                allGroupsChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                allGroupsChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                allGroupsChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                // Create a scroll pane for the chat area
+                JScrollPane scrollPane = new JScrollPane(allGroupsChatArea);
+                scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                // Add to the card panel
+                chatCardPanel.add(scrollPane, "All Groups");
+
+                // Store in the map
+                chatAreas.put("All Groups", allGroupsChatArea);
+            }
+
+            // Show the chat area for all groups
+            CardLayout cardLayout = (CardLayout) chatCardPanel.getLayout();
+            cardLayout.show(chatCardPanel, "All Groups");
+
+            // Get the chat area for all groups
+            JEditorPane currentChatArea = chatAreas.get("All Groups");
+            currentChatArea.setText("");
+
+            // Get all groups the user is a member of
+            List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+
+            // Collect all messages from all groups
+            List<ChatMsg> allMessages = new ArrayList<>();
+            for (ChatGrp group : userGroups) {
+                List<ChatMsg> groupMessages = chatService.getGroupMessages(group.getName());
+                allMessages.addAll(groupMessages);
+            }
+
+            // Sort messages by sent time
+            allMessages.sort((m1, m2) -> m1.getSentTime().compareTo(m2.getSentTime()));
+
+            // Display all messages with group information
+            displayMessages(allMessages, currentChatArea);
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading group messages: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
 
 
