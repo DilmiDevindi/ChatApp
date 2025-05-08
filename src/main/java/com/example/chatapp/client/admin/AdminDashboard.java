@@ -202,3 +202,124 @@ public class AdminDashboard extends JFrame {
         });
     }
 
+    /**
+     * Create the user management panel.
+     */
+    private JPanel createUserPanel() {
+        // Define colors for a consistent theme
+        Color primaryColor = new Color(52, 73, 85);     // Dark blue-gray
+        Color secondaryColor = new Color(249, 170, 51); // Orange
+        Color backgroundColor = new Color(232, 237, 241); // Light gray-blue
+        Color textColor = new Color(35, 47, 52);        // Dark gray
+        Color buttonColor = new Color(74, 101, 114);    // Medium blue-gray
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(backgroundColor);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Create table model with columns
+        userTableModel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table non-editable
+            }
+        };
+        userTableModel.addColumn("ID");
+        userTableModel.addColumn("Username");
+        userTableModel.addColumn("Email");
+        userTableModel.addColumn("Admin");
+        userTableModel.addColumn("Online");
+
+        // Create table with styling
+        userTable = new JTable(userTableModel);
+        userTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        userTable.setRowHeight(25);
+        userTable.setGridColor(new Color(200, 200, 200));
+        userTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        userTable.getTableHeader().setBackground(primaryColor);
+        userTable.getTableHeader().setForeground(Color.WHITE);
+
+        JScrollPane scrollPane = new JScrollPane(userTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(primaryColor));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Button panel with styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(backgroundColor);
+
+        refreshUsersButton = new JButton("Refresh Users");
+        refreshUsersButton.setFont(new Font("Arial", Font.BOLD, 14));
+        refreshUsersButton.setForeground(Color.WHITE);
+        refreshUsersButton.setBackground(buttonColor);
+        refreshUsersButton.setFocusPainted(false);
+        refreshUsersButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        removeUserButton = new JButton("Remove User");
+        removeUserButton.setFont(new Font("Arial", Font.BOLD, 14));
+        removeUserButton.setForeground(Color.WHITE);
+        removeUserButton.setBackground(secondaryColor);
+        removeUserButton.setFocusPainted(false);
+        removeUserButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        buttonPanel.add(refreshUsersButton);
+        buttonPanel.add(removeUserButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add action listeners
+        refreshUsersButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadUsers();
+            }
+        });
+
+        removeUserButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                removeSelectedUser();
+            }
+        });
+
+        return panel;
+    }
+
+    /**
+     * Create the chat management panel.
+     */
+    private JPanel createChatPanel() {
+        // Define colors for a consistent theme
+        Color primaryColor = new Color(52, 73, 85);     // Dark blue-gray
+        Color secondaryColor = new Color(249, 170, 51); // Orange
+        Color backgroundColor = new Color(232, 237, 241); // Light gray-blue
+        Color textColor = new Color(35, 47, 52);        // Dark gray
+        Color buttonColor = new Color(74, 101, 114);    // Medium blue-gray
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(backgroundColor);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Create table model with columns
+        chatTableModel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table non-editable
+            }
+        };
+        chatTableModel.addColumn("ID");
+        chatTableModel.addColumn("Name");
+        chatTableModel.addColumn("Description");
+        chatTableModel.addColumn("Creator");
+        chatTableModel.addColumn("Members");
+
+        // Create table with styling
+        chatTable = new JTable(chatTableModel);
+        chatTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        chatTable.setRowHeight(25);
+        chatTable.setGridColor(new Color(200, 200, 200));
+        chatTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        chatTable.getTableHeader().setBackground(primaryColor);
+        chatTable.getTableHeader().setForeground(Color.WHITE);
+
+        JScrollPane scrollPane = new JScrollPane(chatTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(primaryColor));
+        panel.add(scrollPane, BorderLayout.CENTER);
