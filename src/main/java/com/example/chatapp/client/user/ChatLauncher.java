@@ -1577,7 +1577,7 @@ public class ChatLauncher extends JFrame implements ChatObserver {
 
     /**
      * Update the user's profile.
-     */
+
     private void updateProfile() {
         try {
             // Create a panel for the profile update form
@@ -1665,7 +1665,7 @@ public class ChatLauncher extends JFrame implements ChatObserver {
                     selectedProfilePicture[0] = selectedFile.getAbsolutePath();
                     profilePictureField.setText(selectedProfilePicture[0]);
                 }
-            });
+            });*/
 
             // Show the dialog
             int result = JOptionPane.showConfirmDialog(this, panel, "Update Profile",
