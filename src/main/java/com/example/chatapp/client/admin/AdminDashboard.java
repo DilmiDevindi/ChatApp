@@ -478,3 +478,64 @@ public class AdminDashboard extends JFrame {
 
         return panel;
     }
+
+
+    /**
+     * Load the list of users.
+     */
+    private void loadUsers() {
+        try {
+            List<ChatUser> users = userService.getAllUsers();
+
+            // Clear table
+            userTableModel.setRowCount(0);
+
+            // Add users to table
+            for (ChatUser user : users) {
+                Object[] row = {
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.isAdmin() ? "Yes" : "No",
+                        user.isOnline() ? "Yes" : "No"
+                };
+                userTableModel.addRow(row);
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading users: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Load the system logs.
+     */
+    private void loadLogs() {
+        try {
+            List<ChatLogs> logs = logService.getAllLogs();
+
+            // Clear table
+            logTableModel.setRowCount(0);
+
+            // Add logs to table
+            for (ChatLogs log : logs) {
+                Object[] row = {
+                        log.getId(),
+                        DATE_FORMAT.format(log.getTimestamp()),
+                        log.getUser() != null ? log.getUser().getUsername() : "System",
+                        log.getAction(),
+                        log.getDetails()
+                };
+                logTableModel.addRow(row);
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading logs: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
