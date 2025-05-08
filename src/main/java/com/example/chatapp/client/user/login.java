@@ -163,8 +163,15 @@ public class Login extends JFrame {
                             new Login().setVisible(true);
                         }
                     });
+                } else {
+                    System.out.println("Opening ChatLauncher for regular user");
+                    // Open chat launcher
+                    SwingUtilities.invokeLater(() -> {
+                        new ChatLauncher(user).setVisible(true);
+                    });
                 }
             }
+        }
 }
 
 
