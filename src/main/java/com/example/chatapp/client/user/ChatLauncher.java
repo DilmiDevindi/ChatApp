@@ -530,3 +530,25 @@ public class ChatLauncher extends JFrame implements ChatObserver {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Load the list of users.
+     */
+    private void loadUsers() {
+        try {
+            List<ChatUser> users = userService.getAllUsers();
+            userListModel.clear();
+
+            for (ChatUser user : users) {
+                if (!user.getUsername().equals(currentUser.getUsername())) {
+                    userListModel.addElement(user.getUsername());
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading users: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
