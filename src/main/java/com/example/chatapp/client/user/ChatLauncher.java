@@ -1575,6 +1575,192 @@ public class ChatLauncher extends JFrame implements ChatObserver {
         }
     }
 
+    /**
+     * Update the user's profile.
+     */
+    private void updateProfile() {
+        try {
+            // Create a panel for the profile update form
+            JPanel panel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            // Current user info
+            ChatUser user = userService.getUserByUsername(currentUser.getUsername());
+
+            // Username field (read-only)
+            JLabel usernameLabel = new JLabel("User Name:");
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            panel.add(usernameLabel, gbc);
+
+            JTextField usernameField = new JTextField(user.getUsername(), 20);
+            usernameField.setEditable(false);
+            usernameField.setBackground(new Color(240, 240, 240));
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            panel.add(usernameField, gbc);
+
+            // Password field
+            JLabel passwordLabel = new JLabel("New Password (leave blank to keep current):");
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            panel.add(passwordLabel, gbc);
+
+            JPasswordField passwordField = new JPasswordField(20);
+            gbc.gridx = 1;
+            gbc.gridy = 1;
+            panel.add(passwordField, gbc);
+
+            // Nick name field
+            JLabel nickNameLabel = new JLabel("Nick Name:");
+            gbc.gridx = 0;
+            gbc.gridy = 2;
+            panel.add(nickNameLabel, gbc);
+
+            JTextField nickNameField = new JTextField(user.getNickName(), 20);
+            gbc.gridx = 1;
+            gbc.gridy = 2;
+            panel.add(nickNameField, gbc);
+
+            // Profile picture field
+            JLabel profilePictureLabel = new JLabel("Profile Picture:");
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            panel.add(profilePictureLabel, gbc);
+
+            JPanel picturePanel = new JPanel(new BorderLayout());
+            JTextField profilePictureField = new JTextField(user.getProfilePicture(), 15);
+            profilePictureField.setEditable(false);
+            JButton profilePictureButton = new JButton("Browse...");
+            picturePanel.add(profilePictureField, BorderLayout.CENTER);
+            picturePanel.add(profilePictureButton, BorderLayout.EAST);
+
+            gbc.gridx = 1;
+            gbc.gridy = 3;
+            panel.add(picturePanel, gbc);
+
+            // Profile picture selection
+            final String[] selectedProfilePicture = {user.getProfilePicture()};
+            profilePictureButton.addActionListener(e -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select Profile Picture");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(java.io.File f) {
+                        return f.isDirectory() || f.getName().toLowerCase().endsWith(".jpg") ||
+                                f.getName().toLowerCase().endsWith(".jpeg") ||
+                                f.getName().toLowerCase().endsWith(".png") ||
+                                f.getName().toLowerCase().endsWith(".gif");
+                    }
+                    public String getDescription() {
+                        return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+                    }
+                });
+
+                int result = fileChooser.showOpenDialog(ChatLauncher.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    java.io.File selectedFile = fileChooser.getSelectedFile();
+                    selectedProfilePicture[0] = selectedFile.getAbsolutePath();
+                    profilePictureField.setText(selectedProfilePicture[0]);
+                }
+            });
+
+            // Show the dialog
+            int result = JOptionPane.showConfirmDialog(this, panel, "Update Profile",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (result == JOptionPane.OK_OPTION) {
+                // Get the values
+                String newPassword = new String(passwordField.getPassword());
+                String newNickName = nickNameField.getText().trim();
+                String newProfilePicture = selectedProfilePicture[0];
+
+                // Update the profile
+                ChatUser updatedUser = userService.updateProfile(
+                        currentUser.getUsername(),
+                        newPassword.isEmpty() ? null : newPassword,
+                        null, // Not updating email
+                        newNickName,
+                        newProfilePicture
+                );
+
+                if (updatedUser != null) {
+                    // Update the current user
+                    currentUser.setNickName(updatedUser.getNickName());
+                    currentUser.setProfilePicture(updatedUser.getProfilePicture());
+
+                    JOptionPane.showMessageDialog(this,
+                            "Profile updated successfully",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to update profile",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error updating profile: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Subscribe to the selected user.
+     */
+    private void subscribeToUser() {
+        if (selectedUser == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a user to subscribe to",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // Get the SubscribeService from the registry
+            Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+            SubscribeService subscribeService = (SubscribeService) registry.lookup("SubscribeService");
+
+            // Check if already subscribed
+            if (subscribeService.isSubscribed(currentUser.getUsername(), selectedUser)) {
+                JOptionPane.showMessageDialog(this,
+                        "You are already subscribed to " + selectedUser,
+                        "Already Subscribed",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Subscribe to the user
+            Subscribe subscription = subscribeService.subscribe(currentUser.getUsername(), selectedUser);
+
+            if (subscription != null) {
+                JOptionPane.showMessageDialog(this,
+                        "Successfully subscribed to " + selectedUser,
+                        "Subscription",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to subscribe to " + selectedUser,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (RemoteException | NotBoundException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error subscribing to user: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 
