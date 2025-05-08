@@ -278,6 +278,15 @@ public class Login extends JFrame {
             new Register().setVisible(true);
         });
     }
+
+    /**
+     * Main method to start the login interface.
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new Login().setVisible(true);
+        });
+    }
 }
 
 
