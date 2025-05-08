@@ -719,6 +719,272 @@ public class ChatLauncher extends JFrame implements ChatObserver {
             e.printStackTrace();
         }
     }
+    /**
+     * Display messages in the specified chat area.
+     *
+     * @param messages The messages to display
+     * @param targetChatArea The chat area to display messages in
+     */
+    private void displayMessages(List<ChatMsg> messages, JEditorPane targetChatArea) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>");
+
+        // Display the chat start time at the beginning
+        if (!messages.isEmpty()) {
+            try {
+                if (isGroupSelected && selectedGroup != null) {
+                    // For group chats, get the creation date from the group
+                    List<ChatGrp> groups = chatService.getAllGroups();
+                    ChatGrp selectedChatGrp = groups.stream()
+                            .filter(g -> g.getName().equals(selectedGroup))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (selectedChatGrp != null) {
+                        String startTime = DATE_FORMAT.format(selectedChatGrp.getCreatedDate());
+                        sb.append("<div style='color: #4A6572; font-weight: bold; margin-bottom: 10px;'>");
+                        sb.append("Chat started at : ").append(startTime);
+                        sb.append("</div>");
+
+                        // Display all members' joined and left time
+                        sb.append("<div style='color: #4A6572; margin-bottom: 10px;'>");
+                        sb.append("<h3>Group Members:</h3>");
+
+                        try {
+                            // Get all logs to find join and leave times
+                            List<ChatLogs> allLogs = logService.getAllLogs();
+
+                            // Create maps to store join and leave times for each user
+                            Map<String, Date> joinTimes = new HashMap<>();
+                            Map<String, Date> leaveTimes = new HashMap<>();
+                            Date chatStopTime = null;
+
+                            // Filter logs for this chat group and extract join/leave times
+                            for (ChatLogs log : allLogs) {
+                                if (log.getChatId() != null && log.getChatId().equals(selectedGroup)) {
+                                    String username = log.getUser().getUsername();
+                                    if (log.getAction().equals("JOIN")) {
+                                        // Store the most recent join time
+                                        if (!joinTimes.containsKey(username) ||
+                                                log.getTimestamp().after(joinTimes.get(username))) {
+                                            joinTimes.put(username, log.getTimestamp());
+                                        }
+                                    } else if (log.getAction().equals("LEAVE")) {
+                                        // Store the most recent leave time
+                                        if (!leaveTimes.containsKey(username) ||
+                                                log.getTimestamp().after(leaveTimes.get(username))) {
+                                            leaveTimes.put(username, log.getTimestamp());
+                                        }
+                                    } else if (log.getAction().equals("CHAT_STOPPED")) {
+                                        // Store the most recent chat stop time
+                                        if (chatStopTime == null || log.getTimestamp().after(chatStopTime)) {
+                                            chatStopTime = log.getTimestamp();
+                                        }
+                                    }
+                                }
+                            }
+
+                            for (ChatUser member : selectedChatGrp.getMembers()) {
+                                String memberNickName = member.getNickName() != null ? member.getNickName() : member.getUsername();
+                                String username = member.getUsername();
+                                sb.append("<div style='margin-left: 15px; margin-bottom: 5px;'>");
+
+                                // Use profile picture if available
+                                sb.append(getProfilePicture(username, member.getProfilePicture()));
+
+                                // If this member is the creator, show exact join time (group creation time)
+                                if (username.equals(selectedChatGrp.getCreator().getUsername())) {
+                                    sb.append(memberNickName).append(" - Joined: ").append(startTime).append(" (Creator)");
+                                } else {
+                                    // Show join time from logs if available
+                                    String joinTime = joinTimes.containsKey(username) ?
+                                            DATE_FORMAT.format(joinTimes.get(username)) : "Not available";
+                                    sb.append(memberNickName).append(" - Joined: ").append(joinTime);
+                                }
+
+                                // Show leave time if available
+                                if (leaveTimes.containsKey(username)) {
+                                    sb.append(" - Left: ").append(DATE_FORMAT.format(leaveTimes.get(username)));
+                                }
+
+                                sb.append("</div>");
+                            }
+
+                            // Display chat stop time if available
+                            if (chatStopTime != null) {
+                                String stopTimeStr = DATE_FORMAT.format(chatStopTime);
+                                sb.append("<div style='color: #4A6572; font-weight: bold; margin-top: 10px; text-align: center; padding: 10px; border-top: 1px solid #ccc;'>");
+                                sb.append("Chat stopped at : ").append(stopTimeStr);
+                                sb.append("</div>");
+                            }
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                            // Fallback to original behavior if there's an error
+                            for (ChatUser member : selectedChatGrp.getMembers()) {
+                                String memberNickName = member.getNickName() != null ? member.getNickName() : member.getUsername();
+                                sb.append("<div style='margin-left: 15px; margin-bottom: 5px;'>");
+
+                                // Use profile picture if available
+                                sb.append(getProfilePicture(member.getUsername(), member.getProfilePicture()));
+
+                                if (member.getUsername().equals(selectedChatGrp.getCreator().getUsername())) {
+                                    sb.append(memberNickName).append(" - Joined: ").append(startTime).append(" (Creator)");
+                                } else {
+                                    sb.append(memberNickName).append(" - Join time not available");
+                                }
+                                sb.append("</div>");
+                            }
+                        }
+                        sb.append("</div>");
+                    }
+                } else if (selectedUser != null) {
+                    // For direct messages, use the timestamp of the first message
+                    ChatMsg firstMessage = messages.get(0);
+                    String startTime = DATE_FORMAT.format(firstMessage.getSentTime());
+                    sb.append("<div style='color: #4A6572; font-weight: bold; margin-bottom: 10px;'>");
+                    sb.append("Chat started at : ").append(startTime);
+                    sb.append("</div>");
+
+                    // Display user join and leave times for direct messages
+                    sb.append("<div style='color: #4A6572; margin-bottom: 10px;'>");
+                    sb.append("<h3>Chat Participants:</h3>");
+
+                    try {
+                        // Get all logs to find join and leave times
+                        List<ChatLogs> allLogs = logService.getAllLogs();
+
+                        // Create maps to store join and leave times for each user
+                        Map<String, Date> joinTimes = new HashMap<>();
+                        Map<String, Date> leaveTimes = new HashMap<>();
+                        Date chatStopTime = null;
+
+                        // Filter logs for this direct chat and extract join/leave times
+                        for (ChatLogs log : allLogs) {
+                            if (log.getChatId() != null &&
+                                    (log.getChatId().equals(currentUser.getUsername() + "-" + selectedUser) ||
+                                            log.getChatId().equals(selectedUser + "-" + currentUser.getUsername()))) {
+                                String username = log.getUser().getUsername();
+                                if (log.getAction().equals("JOIN")) {
+                                    // Store the most recent join time
+                                    if (!joinTimes.containsKey(username) ||
+                                            log.getTimestamp().after(joinTimes.get(username))) {
+                                        joinTimes.put(username, log.getTimestamp());
+                                    }
+                                } else if (log.getAction().equals("LEAVE")) {
+                                    // Store the most recent leave time
+                                    if (!leaveTimes.containsKey(username) ||
+                                            log.getTimestamp().after(leaveTimes.get(username))) {
+                                        leaveTimes.put(username, log.getTimestamp());
+                                    }
+                                } else if (log.getAction().equals("CHAT_STOPPED")) {
+                                    // Store the most recent chat stop time
+                                    if (chatStopTime == null || log.getTimestamp().after(chatStopTime)) {
+                                        chatStopTime = log.getTimestamp();
+                                    }
+                                }
+                            }
+                        }
+
+                        // Display current user's join/leave times
+                        sb.append("<div style='margin-left: 15px; margin-bottom: 5px;'>");
+                        sb.append(getProfilePicture(currentUser.getUsername(), currentUser.getProfilePicture()));
+                        String currentUserNickName = currentUser.getNickName() != null ? currentUser.getNickName() : currentUser.getUsername();
+                        String joinTime = joinTimes.containsKey(currentUser.getUsername()) ?
+                                DATE_FORMAT.format(joinTimes.get(currentUser.getUsername())) : startTime;
+                        sb.append(currentUserNickName).append(" - Joined: ").append(joinTime);
+                        if (leaveTimes.containsKey(currentUser.getUsername())) {
+                            sb.append(" - Left: ").append(DATE_FORMAT.format(leaveTimes.get(currentUser.getUsername())));
+                        }
+                        sb.append("</div>");
+
+                        // Display selected user's join/leave times
+                        ChatUser selectedUserObj = userService.getUserByUsername(selectedUser);
+                        if (selectedUserObj != null) {
+                            sb.append("<div style='margin-left: 15px; margin-bottom: 5px;'>");
+                            sb.append(getProfilePicture(selectedUser, selectedUserObj.getProfilePicture()));
+                            String selectedUserNickName = selectedUserObj.getNickName() != null ? selectedUserObj.getNickName() : selectedUser;
+                            String selectedJoinTime = joinTimes.containsKey(selectedUser) ?
+                                    DATE_FORMAT.format(joinTimes.get(selectedUser)) : startTime;
+                            sb.append(selectedUserNickName).append(" - Joined: ").append(selectedJoinTime);
+                            if (leaveTimes.containsKey(selectedUser)) {
+                                sb.append(" - Left: ").append(DATE_FORMAT.format(leaveTimes.get(selectedUser)));
+                            }
+                            sb.append("</div>");
+                        }
+
+                        sb.append("</div>");
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for (ChatMsg message : messages) {
+            ChatUser sender = message.getSender();
+            String username = sender.getUsername();
+            String nickName = sender.getNickName() != null ? sender.getNickName() : username;
+            String timestamp = DATE_FORMAT.format(message.getSentTime());
+            String content = message.getMessage();
+            String profilePic = sender.getProfilePicture();
+
+            // Get group information if this is the "All Groups" view
+            String groupInfo = "";
+            if (selectedGroup != null && selectedGroup.equals("All Groups") && message.getGroup() != null) {
+                groupInfo = " <span style='color: #F9AA33;'>[" + message.getGroup().getName() + "]</span>";
+            }
+
+            // Format the message according to the required format
+            if (content.equals("Hi")) {
+                // For Hi greeting - display as a join notification
+                sb.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                // Use profile picture if available
+                sb.append(getProfilePicture(username, profilePic));
+
+                sb.append(nickName).append(groupInfo).append(" has joined : ").append(timestamp);
+                sb.append("</div>");
+            } else if (content.equals("Bye")) {
+                // For Bye message - display as a leave notification
+                sb.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                // Use profile picture if available
+                sb.append(getProfilePicture(username, profilePic));
+
+                sb.append(nickName).append(groupInfo).append(" left : ").append(timestamp);
+                sb.append("</div>");
+            } else if (content.startsWith("@")) {
+                // For mentions, highlight them
+                sb.append("<div style='margin-top: 8px;'>");
+
+                // Use profile picture if available
+                sb.append(getProfilePicture(username, profilePic));
+
+                sb.append("<span style='color: #344955; font-weight: bold;'>").append(nickName).append(groupInfo).append("</span><br>");
+                sb.append("<span style='color: #F9AA33; margin-left: 15px;'>").append(content).append("</span>");
+                sb.append("</div>");
+            } else {
+                // For regular messages
+                sb.append("<div style='margin-top: 8px;'>");
+
+                // Use profile picture if available
+                sb.append(getProfilePicture(username, profilePic));
+
+                sb.append("<span style='color: #344955; font-weight: bold;'>").append(nickName).append(groupInfo).append("</span><br>");
+                sb.append("<span style='color: #232F34; margin-left: 15px;'>").append(content).append("</span>");
+                sb.append("</div>");
+            }
+        }
+
+        sb.append("</body></html>");
+        targetChatArea.setText(sb.toString());
+        // Scroll to bottom
+        targetChatArea.setCaretPosition(0);
+    }
+
+
 
 
 
