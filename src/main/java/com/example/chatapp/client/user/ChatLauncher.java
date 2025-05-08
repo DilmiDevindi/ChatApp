@@ -983,6 +983,363 @@ public class ChatLauncher extends JFrame implements ChatObserver {
         // Scroll to bottom
         targetChatArea.setCaretPosition(0);
     }
+    /**
+     * Send a message to the selected user or group.
+     */
+    private void sendMessage() {
+        String message = messageField.getText().trim();
+
+        if (message.isEmpty()) {
+            return;
+        }
+
+        try {
+            // Check if the message is "Bye" to leave the chat
+            if (message.equalsIgnoreCase("Bye")) {
+                if (isGroupSelected && selectedGroup != null) {
+                    // Special handling for "All Groups" view
+                    if (selectedGroup.equals("All Groups")) {
+                        try {
+                            List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                            if (userGroups.isEmpty()) {
+                                JOptionPane.showMessageDialog(this,
+                                        "You are not a member of any group.",
+                                        "No Groups",
+                                        JOptionPane.INFORMATION_MESSAGE);
+                                return;
+                            }
+
+                            List<String> groupNames = userGroups.stream()
+                                    .map(ChatGrp::getName)
+                                    .toList();
+
+                            String chosenGroup = (String) JOptionPane.showInputDialog(
+                                    this,
+                                    "Select a group to leave:",
+                                    "Select Group",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    groupNames.toArray(),
+                                    groupNames.get(0)
+                            );
+
+                            if (chosenGroup != null) {
+                                // Leave the selected group
+                                boolean success = chatService.removeUserFromGroup(chosenGroup, currentUser.getUsername());
+                                if (success) {
+                                    // Get the current date and time
+                                    Date leaveTime = new Date();
+                                    String nickName = currentUser.getNickName() != null ? currentUser.getNickName() : currentUser.getUsername();
+
+                                    // Notify all users in the group that this user has left
+                                    chatService.notifyUserLeft(chosenGroup, currentUser.getUsername(), nickName, leaveTime);
+
+                                    messageField.setText("");
+                                    JOptionPane.showMessageDialog(this,
+                                            "You have left the group: " + chosenGroup,
+                                            "Left Group",
+                                            JOptionPane.INFORMATION_MESSAGE);
+                                    loadGroups();
+
+                                    // Refresh the "All Groups" view
+                                    loadAllGroupMessages();
+                                } else {
+                                    JOptionPane.showMessageDialog(this,
+                                            "Failed to leave group: " + chosenGroup,
+                                            "Error",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        } catch (RemoteException ex) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Error getting groups: " + ex.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            ex.printStackTrace();
+                        }
+                        return;
+                    }
+
+                    // Leave the group
+                    boolean success = chatService.removeUserFromGroup(selectedGroup, currentUser.getUsername());
+                    if (success) {
+                        // Get the current date and time
+                        Date leaveTime = new Date();
+                        String nickName = currentUser.getNickName() != null ? currentUser.getNickName() : currentUser.getUsername();
+
+                        // Display the leave message in the chat
+                        String timeStr = DATE_FORMAT.format(leaveTime);
+
+                        StringBuilder leaveMessageBuilder = new StringBuilder();
+                        leaveMessageBuilder.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                        // Always use default profile icon instead of images
+                        leaveMessageBuilder.append(getDefaultProfileIcon(nickName));
+
+                        leaveMessageBuilder.append(nickName).append(" left : ").append(timeStr).append("</div>");
+                        String leaveMessage = leaveMessageBuilder.toString();
+
+                        // Get the chat area for this group
+                        JEditorPane groupChatArea = chatAreas.get(selectedGroup);
+                        if (groupChatArea != null) {
+                            // Get current content without closing tags
+                            String currentText = groupChatArea.getText();
+                            currentText = currentText.replace("</body></html>", "");
+
+                            // Add new message and close tags
+                            groupChatArea.setText(currentText + leaveMessage + "</body></html>");
+                        } else {
+                            // Fallback to default chat area if group chat area doesn't exist
+                            String currentText = chatArea.getText();
+                            currentText = currentText.replace("</body></html>", "");
+
+                            // Add new message and close tags
+                            chatArea.setText(currentText + leaveMessage + "</body></html>");
+                        }
+
+                        // Notify all users in the group that this user has left
+                        chatService.notifyUserLeft(selectedGroup, currentUser.getUsername(), nickName, leaveTime);
+
+                        messageField.setText("");
+                        JOptionPane.showMessageDialog(this,
+                                "You have left the group: " + selectedGroup,
+                                "Left Group",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        loadGroups();
+
+                        // Clear the chat area and reset selection
+                        JEditorPane selectedGroupChatArea = chatAreas.get(selectedGroup);
+                        if (selectedGroupChatArea != null) {
+                            selectedGroupChatArea.setText("");
+                        }
+                        selectedGroup = null;
+                        isGroupSelected = false;
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to leave group: " + selectedGroup,
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                    return;
+                } else if (!isGroupSelected && selectedUser != null) {
+                    // Handle "Bye" for direct messages
+                    // Get the current date and time
+                    Date leaveTime = new Date();
+                    String nickName = currentUser.getNickName() != null ? currentUser.getNickName() : currentUser.getUsername();
+
+                    // Send the "Bye" message to notify the other user
+                    ChatMsg chatMsg = chatService.sendMessage(currentUser.getUsername(), selectedUser, message);
+                    if (chatMsg != null) {
+                        // Display the leave message in the chat
+                        String timeStr = DATE_FORMAT.format(leaveTime);
+
+                        StringBuilder leaveMessageBuilder = new StringBuilder();
+                        leaveMessageBuilder.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                        // Always use default profile icon instead of images
+                        leaveMessageBuilder.append(getDefaultProfileIcon(nickName));
+
+                        leaveMessageBuilder.append(nickName).append(" left : ").append(timeStr).append("</div>");
+                        String leaveMessage = leaveMessageBuilder.toString();
+
+                        // For direct messages, use the default chat area
+                        String currentText = chatArea.getText();
+                        currentText = currentText.replace("</body></html>", "");
+
+                        // Add new message and close tags
+                        chatArea.setText(currentText + leaveMessage + "</body></html>");
+
+                        messageField.setText("");
+                        JOptionPane.showMessageDialog(this,
+                                "You have left the chat with: " + selectedUser,
+                                "Left Chat",
+                                JOptionPane.INFORMATION_MESSAGE);
+
+                        // Store the selected user before clearing
+                        String chatPartner = selectedUser;
+
+                        // Clear the chat area and reset selection
+                        chatArea.setText("");
+                        selectedUser = null;
+
+                        // Notify that the chat has stopped and exit the application
+                        try {
+                            // First notify that the user has left
+                            chatService.notifyUserLeft(chatPartner, currentUser.getUsername(), nickName, leaveTime);
+                            // Then notify that the chat has stopped
+                            chatService.notifyChatStopped(chatPartner, leaveTime);
+                        } catch (RemoteException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    return;
+                }
+            }
+
+            if (isGroupSelected && selectedGroup != null) {
+                if (selectedGroup.equals("All Groups")) {
+                    // When "All Groups" is selected, send the message to all groups the user is a member of
+                    try {
+                        List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                        if (userGroups.isEmpty()) {
+                            JOptionPane.showMessageDialog(this,
+                                    "You are not a member of any group. Please join a group first.",
+                                    "No Groups",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+
+                        // Send message to all groups
+                        boolean messageSent = false;
+                        for (ChatGrp group : userGroups) {
+                            ChatMsg chatMsg = chatService.sendGroupMessage(currentUser.getUsername(), group.getName(), message);
+                            if (chatMsg != null) {
+                                messageSent = true;
+                            }
+                        }
+
+                        if (messageSent) {
+                            messageField.setText("");
+                            // Stay in the "All Groups" view but refresh the messages
+                            loadAllGroupMessages();
+                            JOptionPane.showMessageDialog(this,
+                                    "Message sent to all groups",
+                                    "Message Sent",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    } catch (RemoteException ex) {
+                        JOptionPane.showMessageDialog(this,
+                                "Error getting groups: " + ex.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        ex.printStackTrace();
+                    }
+                } else {
+                    // Send group message to the selected group
+                    ChatMsg chatMsg = chatService.sendGroupMessage(currentUser.getUsername(), selectedGroup, message);
+                    if (chatMsg != null) {
+                        messageField.setText("");
+                        loadMessages();
+                    }
+                }
+            } else if (!isGroupSelected && selectedUser != null) {
+                // Send direct message
+                ChatMsg chatMsg = chatService.sendMessage(currentUser.getUsername(), selectedUser, message);
+                if (chatMsg != null) {
+                    messageField.setText("");
+                    loadMessages();
+                }
+            } else if (isGroupSelected && selectedGroup == null) {
+                // If a group chat is selected but no specific group is chosen,
+                // show a dialog to select a group
+                try {
+                    List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                    if (userGroups.isEmpty()) {
+                        JOptionPane.showMessageDialog(this,
+                                "You are not a member of any group. Please join a group first.",
+                                "No Groups",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+
+                    List<String> groupNames = userGroups.stream()
+                            .map(ChatGrp::getName)
+                            .toList();
+
+                    String chosenGroup = (String) JOptionPane.showInputDialog(
+                            this,
+                            "Select a group to send message to:",
+                            "Select Group",
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            groupNames.toArray(),
+                            groupNames.get(0)
+                    );
+
+                    if (chosenGroup != null) {
+                        // Send message to the selected group
+                        ChatMsg chatMsg = chatService.sendGroupMessage(currentUser.getUsername(), chosenGroup, message);
+                        if (chatMsg != null) {
+                            messageField.setText("");
+
+                            // Set the selected group and load messages
+                            selectedGroup = chosenGroup;
+                            isGroupSelected = true;
+                            selectedUser = null;
+                            loadMessages();
+                        }
+                    }
+                } catch (RemoteException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error getting groups: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+            } else if (!isGroupSelected && selectedUser == null) {
+                // If no user is selected and we're not in a group chat,
+                // show a dialog to select a user first
+                JOptionPane.showMessageDialog(this,
+                        "Please select a user from the list first before sending a message.",
+                        "No User Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            } else if (isGroupSelected && selectedGroup == null) {
+                // We're in a group chat context but no group is selected
+                // Show a dialog to select a group
+                try {
+                    List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                    if (userGroups.isEmpty()) {
+                        JOptionPane.showMessageDialog(this,
+                                "You are not a member of any group. Please join a group first.",
+                                "No Groups",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+
+                    List<String> groupNames = userGroups.stream()
+                            .map(ChatGrp::getName)
+                            .toList();
+
+                    String chosenGroup = (String) JOptionPane.showInputDialog(
+                            this,
+                            "Select a group to send message to:",
+                            "Select Group",
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            groupNames.toArray(),
+                            groupNames.get(0)
+                    );
+
+                    if (chosenGroup != null) {
+                        // Send message to the selected group
+                        ChatMsg chatMsg = chatService.sendGroupMessage(currentUser.getUsername(), chosenGroup, message);
+                        if (chatMsg != null) {
+                            messageField.setText("");
+
+                            // Set the selected group and load messages
+                            selectedGroup = chosenGroup;
+                            isGroupSelected = true;
+                            selectedUser = null;
+                            loadMessages();
+                        }
+                    }
+                } catch (RemoteException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error getting groups: " + ex.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error sending message: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
 
 
 
