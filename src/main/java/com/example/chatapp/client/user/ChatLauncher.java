@@ -1341,6 +1341,68 @@ public class ChatLauncher extends JFrame implements ChatObserver {
         }
     }
 
+    /**
+     * Create a new group.
+     */
+    private void createGroup() {
+        String groupName = JOptionPane.showInputDialog(this, "Enter group name:");
+        if (groupName != null && !groupName.trim().isEmpty()) {
+            String description = JOptionPane.showInputDialog(this, "Enter group description:");
+            if (description != null) {
+                try {
+                    ChatGrp group = chatService.createGroup(groupName, description, currentUser.getUsername());
+                    if (group != null) {
+                        JOptionPane.showMessageDialog(this,
+                                "Group created successfully",
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+
+                        // Create a chat area for this group
+                        if (!chatAreas.containsKey(groupName)) {
+                            // Create a new chat area for this group
+                            JEditorPane groupChatArea = new JEditorPane("text/html", "");
+                            groupChatArea.setEditable(false);
+                            groupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                            groupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                            groupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                            // Create a scroll pane for the chat area
+                            JScrollPane scrollPane = new JScrollPane(groupChatArea);
+                            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                            // Add to the card panel
+                            chatCardPanel.add(scrollPane, groupName);
+
+                            // Store in the map
+                            chatAreas.put(groupName, groupChatArea);
+
+                            // Initialize with a welcome message
+                            StringBuilder sb = new StringBuilder();
+                            sb.append("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>");
+                            sb.append("<div style='color: #4A6572; font-weight: bold; margin-bottom: 10px;'>");
+                            sb.append("Group created at : ").append(DATE_FORMAT.format(new Date()));
+                            sb.append("</div></body></html>");
+                            groupChatArea.setText(sb.toString());
+                        }
+
+                        loadGroups();
+                    } else {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to create group. Group name may already be taken.",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (RemoteException e) {
+                    JOptionPane.showMessageDialog(this,
+                            "Error creating group: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 
 
 
