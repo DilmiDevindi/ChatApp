@@ -170,6 +170,9 @@ public class Login extends JFrame {
                         new ChatLauncher(user).setVisible(true);
                     });
                 }
+            } else {
+                statusLabel.setText("Invalid username or password");
+                System.out.println("Login failed: Invalid username or password");
             }
         }
 }
