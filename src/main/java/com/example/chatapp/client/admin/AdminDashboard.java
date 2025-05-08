@@ -324,7 +324,6 @@ public class AdminDashboard extends JFrame {
         scrollPane.setBorder(BorderFactory.createLineBorder(primaryColor));
         panel.add(scrollPane, BorderLayout.CENTER);
 
-
         // Button panel with styling
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         buttonPanel.setBackground(backgroundColor);
@@ -479,7 +478,6 @@ public class AdminDashboard extends JFrame {
         return panel;
     }
 
-
     /**
      * Load the list of users.
      */
@@ -539,7 +537,6 @@ public class AdminDashboard extends JFrame {
             e.printStackTrace();
         }
     }
-
 
     /**
      * Clear all system logs.
@@ -753,6 +750,7 @@ public class AdminDashboard extends JFrame {
             }
         }
     }
+
     /**
      * Remove the selected user from the application.
      */
