@@ -323,3 +323,158 @@ public class AdminDashboard extends JFrame {
         JScrollPane scrollPane = new JScrollPane(chatTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(primaryColor));
         panel.add(scrollPane, BorderLayout.CENTER);
+
+
+        // Button panel with styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(backgroundColor);
+
+        JButton refreshChatsButton = new JButton("Refresh Chats");
+        refreshChatsButton.setFont(new Font("Arial", Font.BOLD, 14));
+        refreshChatsButton.setForeground(Color.WHITE);
+        refreshChatsButton.setBackground(buttonColor);
+        refreshChatsButton.setFocusPainted(false);
+        refreshChatsButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        createChatButton = new JButton("Create Chat");
+        createChatButton.setFont(new Font("Arial", Font.BOLD, 14));
+        createChatButton.setForeground(Color.WHITE);
+        createChatButton.setBackground(secondaryColor);
+        createChatButton.setFocusPainted(false);
+        createChatButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        addUserToChatButton = new JButton("Add User to Chat");
+        addUserToChatButton.setFont(new Font("Arial", Font.BOLD, 14));
+        addUserToChatButton.setForeground(Color.WHITE);
+        addUserToChatButton.setBackground(buttonColor);
+        addUserToChatButton.setFocusPainted(false);
+        addUserToChatButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        removeUserFromChatButton = new JButton("Remove User from Chat");
+        removeUserFromChatButton.setFont(new Font("Arial", Font.BOLD, 14));
+        removeUserFromChatButton.setForeground(Color.WHITE);
+        removeUserFromChatButton.setBackground(secondaryColor);
+        removeUserFromChatButton.setFocusPainted(false);
+        removeUserFromChatButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+
+        buttonPanel.add(refreshChatsButton);
+        buttonPanel.add(createChatButton);
+        buttonPanel.add(addUserToChatButton);
+        buttonPanel.add(removeUserFromChatButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add action listeners
+        refreshChatsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadChats();
+            }
+        });
+
+        createChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createNewChat();
+            }
+        });
+
+        addUserToChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addUserToSelectedChat();
+            }
+        });
+
+        removeUserFromChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                removeUserFromSelectedChat();
+            }
+        });
+
+        // Load initial data
+        loadChats();
+
+        return panel;
+    }
+
+    /**
+     * Create the log viewing panel.
+     */
+    private JPanel createLogPanel() {
+        // Define colors for a consistent theme
+        Color primaryColor = new Color(52, 73, 85);     // Dark blue-gray
+        Color secondaryColor = new Color(249, 170, 51); // Orange
+        Color backgroundColor = new Color(232, 237, 241); // Light gray-blue
+        Color textColor = new Color(35, 47, 52);        // Dark gray
+        Color buttonColor = new Color(74, 101, 114);    // Medium blue-gray
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBackground(backgroundColor);
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // Create table model with columns
+        logTableModel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table non-editable
+            }
+        };
+        logTableModel.addColumn("ID");
+        logTableModel.addColumn("Timestamp");
+        logTableModel.addColumn("User");
+        logTableModel.addColumn("Action");
+        logTableModel.addColumn("Details");
+
+        // Create table with styling
+        logTable = new JTable(logTableModel);
+        logTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        logTable.setRowHeight(25);
+        logTable.setGridColor(new Color(200, 200, 200));
+        logTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        logTable.getTableHeader().setBackground(primaryColor);
+        logTable.getTableHeader().setForeground(Color.WHITE);
+
+        JScrollPane scrollPane = new JScrollPane(logTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(primaryColor));
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Button panel with styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(backgroundColor);
+
+        refreshLogsButton = new JButton("Refresh Logs");
+        refreshLogsButton.setFont(new Font("Arial", Font.BOLD, 14));
+        refreshLogsButton.setForeground(Color.WHITE);
+        refreshLogsButton.setBackground(buttonColor);
+        refreshLogsButton.setFocusPainted(false);
+        refreshLogsButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        clearLogsButton = new JButton("Clear Logs");
+        clearLogsButton.setFont(new Font("Arial", Font.BOLD, 14));
+        clearLogsButton.setForeground(Color.WHITE);
+        clearLogsButton.setBackground(secondaryColor);
+        clearLogsButton.setFocusPainted(false);
+        clearLogsButton.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20));
+
+        buttonPanel.add(refreshLogsButton);
+        buttonPanel.add(clearLogsButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add action listeners
+        refreshLogsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadLogs();
+            }
+        });
+
+        clearLogsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearLogs();
+            }
+        });
+
+        return panel;
+    }
