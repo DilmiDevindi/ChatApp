@@ -174,6 +174,11 @@ public class Login extends JFrame {
                 statusLabel.setText("Invalid username or password");
                 System.out.println("Login failed: Invalid username or password");
             }
+        } catch (RemoteException | NotBoundException e) {
+            statusLabel.setText("Error connecting to server: " + e.getMessage());
+            System.out.println("Login failed: Error connecting to server: " + e.getMessage());
+            e.printStackTrace();
+        }
         }
 }
 
