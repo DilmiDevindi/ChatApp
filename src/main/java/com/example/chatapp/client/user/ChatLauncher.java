@@ -1760,6 +1760,494 @@ public class ChatLauncher extends JFrame implements ChatObserver {
         }
     }
 
+    /**
+     * Unsubscribe from the selected user.
+     */
+    private void unsubscribeFromUser() {
+        if (selectedUser == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a user to unsubscribe from",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            // Get the SubscribeService from the registry
+            Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+            SubscribeService subscribeService = (SubscribeService) registry.lookup("SubscribeService");
+
+            // Check if subscribed
+            if (!subscribeService.isSubscribed(currentUser.getUsername(), selectedUser)) {
+                JOptionPane.showMessageDialog(this,
+                        "You are not subscribed to " + selectedUser,
+                        "Not Subscribed",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Unsubscribe from the user
+            boolean success = subscribeService.unsubscribe(currentUser.getUsername(), selectedUser);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this,
+                        "Successfully unsubscribed from " + selectedUser,
+                        "Unsubscription",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to unsubscribe from " + selectedUser,
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (RemoteException | NotBoundException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error unsubscribing from user: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Helper method to style buttons consistently
+     */
+    private void styleButton(JButton button, Color bgColor, Color fgColor) {
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setMargin(new Insets(5, 10, 5, 10));
+    }
+
+    /**
+     * Generate HTML for a default profile icon using the first letter of the name.
+     * This is used as a fallback when profile pictures are not available.
+     *
+     * @param name The name to use for the icon (first letter will be used)
+     * @return HTML string for the default profile icon
+     */
+    private String getDefaultProfileIcon(String name) {
+        String initial = name.substring(0, 1).toUpperCase();
+        return "<span style='display: inline-block; width: 30px; height: 30px; background-color: #344955; color: white; text-align: center; line-height: 30px; border-radius: 50%; margin-right: 5px;'>"
+                + initial + "</span>";
+    }
+
+    /**
+     * Generate HTML for a profile picture.
+     * This uses the actual profile picture from resources if available, otherwise falls back to default icon.
+     *
+     * @param username The username
+     * @param profilePicPath The path to the profile picture
+     * @return HTML string for the profile picture
+     */
+    private String getProfilePicture(String username, String profilePicPath) {
+        // If profile picture path is null or empty, use default icon
+        if (profilePicPath == null || profilePicPath.isEmpty()) {
+            return getDefaultProfileIcon(username);
+        }
+
+        // Check if the profile picture is one of the known images in resources
+        String imageName = profilePicPath.contains("\\") ?
+                profilePicPath.substring(profilePicPath.lastIndexOf("\\") + 1) :
+                profilePicPath;
+
+        // Create path to the image in resources
+        java.net.URL resourceUrl = getClass().getClassLoader().getResource("Images/" + imageName);
+
+        if (resourceUrl != null) {
+            return "<img src='" + resourceUrl.toString() + "' width='30' height='30' style='border-radius: 50%; margin-right: 5px;' alt='" + username + "' />";
+        } else {
+            // Fallback to default icon if image not found
+            return getDefaultProfileIcon(username);
+        }
+    }
+
+    /**
+     * Log out and close the application.
+     */
+    private void logout() {
+        try {
+            // Unregister as observer
+            chatService.unregisterObserver(this);
+
+            // Logout user
+            userService.logout(currentUser.getUsername());
+
+            // Close window and return to login
+            dispose();
+            SwingUtilities.invokeLater(() -> {
+                new Login().setVisible(true);
+            });
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error during logout: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    // ChatObserver implementation
+
+    @Override
+    public void update(ChatMsg message) throws RemoteException {
+        // If the message is from or to the current conversation, refresh
+        String sender = message.getSender().getUsername();
+
+        // Handle group messages
+        if (message.getGroup() != null) {
+            String groupName = message.getGroup().getName();
+
+            // Check if the current user is a member of this group
+            try {
+                List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                boolean isMember = userGroups.stream()
+                        .anyMatch(group -> group.getName().equals(groupName));
+
+                // Only process messages for groups the user is a member of
+                if (!isMember) {
+                    return;
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+                return;
+            }
+
+            // Create a chat area for this group if it doesn't exist
+            if (!chatAreas.containsKey(groupName)) {
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        // Create a new chat area for this group
+                        JEditorPane groupChatArea = new JEditorPane("text/html", "");
+                        groupChatArea.setEditable(false);
+                        groupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                        groupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                        groupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                        // Create a scroll pane for the chat area
+                        JScrollPane scrollPane = new JScrollPane(groupChatArea);
+                        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                        // Add to the card panel
+                        chatCardPanel.add(scrollPane, groupName);
+
+                        // Store in the map
+                        chatAreas.put(groupName, groupChatArea);
+
+                        // Load messages for this group
+                        List<ChatMsg> messages = chatService.getGroupMessages(groupName);
+                        displayMessages(messages, groupChatArea);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                });
+            } else {
+                // Update the existing chat area with the new message
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        JEditorPane groupChatArea = chatAreas.get(groupName);
+                        List<ChatMsg> messages = chatService.getGroupMessages(groupName);
+                        displayMessages(messages, groupChatArea);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            // If this is the currently selected group, show it
+            if (isGroupSelected && selectedGroup != null && selectedGroup.equals(groupName)) {
+                SwingUtilities.invokeLater(() -> {
+                    CardLayout cardLayout = (CardLayout) chatCardPanel.getLayout();
+                    cardLayout.show(chatCardPanel, groupName);
+                });
+            }
+        } else {
+            // For direct messages
+            if (isGroupSelected) {
+                // If a group is selected but this is a direct message, ignore
+                return;
+            }
+
+            if ((sender.equals(selectedUser) ||
+                    (message.getReceiver() != null && message.getReceiver().getUsername().equals(selectedUser)))) {
+                SwingUtilities.invokeLater(this::loadMessages);
+            }
+        }
+    }
+
+    @Override
+    public void userStatusChanged(String username, boolean isOnline) throws RemoteException {
+        // Refresh user list when a user's status changes
+        SwingUtilities.invokeLater(this::loadUsers);
+    }
+
+    @Override
+    public String getUsername() throws RemoteException {
+        return currentUser.getUsername();
+    }
+
+    @Override
+    public void chatStarted(String chatName, Date startTime) throws RemoteException {
+        SwingUtilities.invokeLater(() -> {
+            // Display notification only if the user is subscribed to the chat
+            try {
+                List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+                boolean isSubscribed = userGroups.stream()
+                        .anyMatch(group -> group.getName().equals(chatName));
+
+                if (isSubscribed) {
+                    String timeStr = DATE_FORMAT.format(startTime);
+                    JOptionPane.showMessageDialog(this,
+                            "Chat '" + chatName + "' has started!",
+                            "Chat Started",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                    // If the chat is currently selected, update the chat area
+                    if (isGroupSelected && selectedGroup != null && selectedGroup.equals(chatName)) {
+                        String startMessage = "<div style='color: #4A6572; font-weight: bold; margin-bottom: 10px;'>" +
+                                "Chat started at : " + timeStr + "</div>";
+
+                        // Create new HTML content
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>");
+                        sb.append(startMessage);
+                        sb.append("</body></html>");
+
+                        // Get the chat area for this group
+                        JEditorPane groupChatArea = chatAreas.get(chatName);
+                        if (groupChatArea != null) {
+                            groupChatArea.setText(sb.toString());
+                            groupChatArea.setCaretPosition(0);
+                        } else {
+                            // If the chat area doesn't exist yet, create it
+                            JEditorPane newGroupChatArea = new JEditorPane("text/html", "");
+                            newGroupChatArea.setEditable(false);
+                            newGroupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                            newGroupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                            newGroupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                            // Create a scroll pane for the chat area
+                            JScrollPane scrollPane = new JScrollPane(newGroupChatArea);
+                            scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                            // Add to the card panel
+                            chatCardPanel.add(scrollPane, chatName);
+
+                            // Store in the map
+                            chatAreas.put(chatName, newGroupChatArea);
+
+                            // Set the text
+                            newGroupChatArea.setText(sb.toString());
+                            newGroupChatArea.setCaretPosition(0);
+
+                            // Show the chat area
+                            CardLayout cardLayout = (CardLayout) chatCardPanel.getLayout();
+                            cardLayout.show(chatCardPanel, chatName);
+                        }
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void userJoined(String chatName, String username, String nickName, Date joinTime) throws RemoteException {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // If the chat is currently selected, update the chat area
+                if (isGroupSelected && selectedGroup != null && selectedGroup.equals(chatName)) {
+                    // Get the user's profile picture
+                    ChatUser user = userService.getUserByUsername(username);
+                    String profilePic = user != null ? user.getProfilePicture() : null;
+                    String timeStr = DATE_FORMAT.format(joinTime);
+
+                    StringBuilder joinMessageBuilder = new StringBuilder();
+                    joinMessageBuilder.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                    // Always use default profile icon instead of images
+                    joinMessageBuilder.append(getDefaultProfileIcon(nickName));
+
+                    joinMessageBuilder.append(nickName).append(" has joined : ").append(timeStr).append("</div>");
+                    String joinMessage = joinMessageBuilder.toString();
+
+                    // Get the chat area for this group
+                    JEditorPane groupChatArea = chatAreas.get(chatName);
+                    if (groupChatArea != null) {
+                        // Get current content without closing tags
+                        String currentText = groupChatArea.getText();
+                        currentText = currentText.replace("</body></html>", "");
+
+                        // Add new message and close tags
+                        groupChatArea.setText(currentText + joinMessage + "</body></html>");
+                    } else {
+                        // If the chat area doesn't exist yet, create it
+                        JEditorPane newGroupChatArea = new JEditorPane("text/html", "");
+                        newGroupChatArea.setEditable(false);
+                        newGroupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                        newGroupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                        newGroupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                        // Create a scroll pane for the chat area
+                        JScrollPane scrollPane = new JScrollPane(newGroupChatArea);
+                        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                        // Add to the card panel
+                        chatCardPanel.add(scrollPane, chatName);
+
+                        // Store in the map
+                        chatAreas.put(chatName, newGroupChatArea);
+
+                        // Set the text
+                        newGroupChatArea.setText("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>" +
+                                joinMessage + "</body></html>");
+                        newGroupChatArea.setCaretPosition(0);
+                    }
+
+                    // Scroll to appropriate position
+                    JEditorPane currentChatArea = chatAreas.get(chatName);
+                    if (currentChatArea != null) {
+                        currentChatArea.setCaretPosition(0);
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void userLeft(String chatName, String username, String nickName, Date leaveTime) throws RemoteException {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                // If the chat is currently selected, update the chat area
+                if ((isGroupSelected && selectedGroup != null && selectedGroup.equals(chatName)) ||
+                        (!isGroupSelected && selectedUser != null && selectedUser.equals(chatName))) {
+
+                    // Get the user's profile picture
+                    ChatUser user = userService.getUserByUsername(username);
+                    String profilePic = user != null ? user.getProfilePicture() : null;
+                    String timeStr = DATE_FORMAT.format(leaveTime);
+
+                    StringBuilder leaveMessageBuilder = new StringBuilder();
+                    leaveMessageBuilder.append("<div style='color: #4A6572; font-weight: bold; margin-top: 8px;'>");
+
+                    // Always use default profile icon instead of images
+                    leaveMessageBuilder.append(getDefaultProfileIcon(nickName));
+
+                    leaveMessageBuilder.append(nickName).append(" left : ").append(timeStr).append("</div>");
+                    String leaveMessage = leaveMessageBuilder.toString();
+
+                    // Get the chat area for this group
+                    JEditorPane groupChatArea = chatAreas.get(chatName);
+                    if (groupChatArea != null) {
+                        // Get current content without closing tags
+                        String currentText = groupChatArea.getText();
+                        currentText = currentText.replace("</body></html>", "");
+
+                        // Add new message and close tags
+                        groupChatArea.setText(currentText + leaveMessage + "</body></html>");
+
+                        // Scroll to appropriate position
+                        groupChatArea.setCaretPosition(0);
+                    } else {
+                        // If the chat area doesn't exist yet, create it
+                        JEditorPane newGroupChatArea = new JEditorPane("text/html", "");
+                        newGroupChatArea.setEditable(false);
+                        newGroupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                        newGroupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                        newGroupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                        // Create a scroll pane for the chat area
+                        JScrollPane scrollPane = new JScrollPane(newGroupChatArea);
+                        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                        // Add to the card panel
+                        chatCardPanel.add(scrollPane, chatName);
+
+                        // Store in the map
+                        chatAreas.put(chatName, newGroupChatArea);
+
+                        // Set the text
+                        newGroupChatArea.setText("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>" +
+                                leaveMessage + "</body></html>");
+                        newGroupChatArea.setCaretPosition(0);
+                    }
+
+                    // If this is a direct chat and the other user left, reset the selection
+                    if (!isGroupSelected && selectedUser != null && selectedUser.equals(username)) {
+                        JOptionPane.showMessageDialog(this,
+                                nickName + " has left the chat",
+                                "User Left",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Override
+    public void chatStopped(String chatName, Date stopTime) throws RemoteException {
+        SwingUtilities.invokeLater(() -> {
+            // Display the chat stopped message
+            String timeStr = DATE_FORMAT.format(stopTime);
+
+            // Create a message indicating the chat has stopped
+            String chatStoppedMessage = "<div style='color: #4A6572; font-weight: bold; margin-top: 8px; text-align: center; margin-top: 20px; padding: 10px; border-top: 1px solid #ccc;'>" +
+                    "Chat stopped at : " + timeStr + "</div>";
+
+            // Get the chat area for this group
+            JEditorPane groupChatArea = chatAreas.get(chatName);
+            if (groupChatArea != null) {
+                // Get current content without closing tags
+                String currentText = groupChatArea.getText();
+                currentText = currentText.replace("</body></html>", "");
+
+                // Add new message and close tags
+                groupChatArea.setText(currentText + chatStoppedMessage + "</body></html>");
+
+                // Scroll to appropriate position
+                groupChatArea.setCaretPosition(groupChatArea.getDocument().getLength());
+            } else {
+                // If this is a direct message or the chat area doesn't exist, use the default chat area
+                String currentText = chatArea.getText();
+                currentText = currentText.replace("</body></html>", "");
+
+                // Add new message and close tags
+                chatArea.setText(currentText + chatStoppedMessage + "</body></html>");
+
+                // Scroll to appropriate position
+                chatArea.setCaretPosition(chatArea.getDocument().getLength());
+            }
+
+            // Show a notification
+            JOptionPane.showMessageDialog(this,
+                    "Chat '" + chatName + "' has stopped!",
+                    "Chat Stopped",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+            // Reset selection
+            if (isGroupSelected) {
+                selectedGroup = null;
+                isGroupSelected = false;
+                // Refresh groups list
+                loadGroups();
+            } else {
+                selectedUser = null;
+            }
+        });
+    }
+}
+
+
+
 
 
 
