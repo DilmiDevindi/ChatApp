@@ -345,3 +345,188 @@ public class ChatLauncher extends JFrame implements ChatObserver {
                 loadMessages();
             }
         });
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+
+        messageField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+
+        createGroupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createGroup();
+            }
+        });
+
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadUsers();
+                loadGroups();
+            }
+        });
+
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logout();
+            }
+        });
+
+        joinGroupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                joinGroup();
+            }
+        });
+
+        leaveGroupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                leaveGroup();
+            }
+        });
+
+        updateProfileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateProfile();
+            }
+        });
+
+        subscribeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                subscribeToUser();
+            }
+        });
+
+        unsubscribeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                unsubscribeFromUser();
+            }
+        });
+
+        viewMembersButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                viewGroupMembers();
+            }
+        });
+    }
+
+    /**
+     * View members of a group without selecting it.
+     */
+    private void viewGroupMembers() {
+        try {
+            // Get groups the user is a member of
+            List<ChatGrp> userGroups = chatService.getUserGroups(currentUser.getUsername());
+
+            if (userGroups.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "You are not a member of any group.",
+                        "No Groups",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // Create a list of group names
+            List<String> groupNames = userGroups.stream()
+                    .map(ChatGrp::getName)
+                    .toList();
+
+            // Show dialog to select a group
+            String selectedGroupName = (String) JOptionPane.showInputDialog(
+                    this,
+                    "Select a group to view members:",
+                    "View Group Members",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    groupNames.toArray(),
+                    groupNames.get(0)
+            );
+
+            if (selectedGroupName != null) {
+                // Find the selected group
+                ChatGrp selectedGroup = userGroups.stream()
+                        .filter(g -> g.getName().equals(selectedGroupName))
+                        .findFirst()
+                        .orElse(null);
+
+                if (selectedGroup != null) {
+                    // Build a string with all members
+                    StringBuilder membersInfo = new StringBuilder();
+                    membersInfo.append("<html><body style='font-family: Arial, sans-serif; margin: 10px;'>");
+                    membersInfo.append("<h2>").append(selectedGroupName).append(" - Group Members</h2>");
+
+                    // Get the creation date
+                    String startTime = DATE_FORMAT.format(selectedGroup.getCreatedDate());
+                    membersInfo.append("<div style='color: #4A6572; font-weight: bold; margin-bottom: 10px;'>");
+                    membersInfo.append("Group created at: ").append(startTime);
+                    membersInfo.append("</div>");
+
+                    // List all members
+                    for (ChatUser member : selectedGroup.getMembers()) {
+                        String memberNickName = member.getNickName() != null ? member.getNickName() : member.getUsername();
+                        membersInfo.append("<div style='margin-left: 15px; margin-bottom: 5px;'>");
+
+                        // Always use default profile icon instead of images
+                        String memberNickNameInitial = memberNickName.substring(0, 1).toUpperCase();
+                        membersInfo.append("<span style='display: inline-block; width: 30px; height: 30px; background-color: #344955; color: white; text-align: center; line-height: 30px; border-radius: 50%; margin-right: 5px;'>")
+                                .append(memberNickNameInitial)
+                                .append("</span>");
+
+                        // If this member is the creator, show that
+                        if (member.getUsername().equals(selectedGroup.getCreator().getUsername())) {
+                            membersInfo.append(memberNickName).append(" (Creator)");
+                        } else {
+                            membersInfo.append(memberNickName);
+                        }
+
+                        membersInfo.append("</div>");
+                    }
+
+                    membersInfo.append("</body></html>");
+
+                    // Create a custom dialog to display the members
+                    JDialog dialog = new JDialog(this, "Group Members", true);
+                    dialog.setLayout(new BorderLayout());
+
+                    JEditorPane membersPane = new JEditorPane("text/html", membersInfo.toString());
+                    membersPane.setEditable(false);
+                    membersPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                    membersPane.setBackground(new Color(245, 245, 250));
+
+                    JScrollPane scrollPane = new JScrollPane(membersPane);
+                    dialog.add(scrollPane, BorderLayout.CENTER);
+
+                    JButton closeButton = new JButton("Close");
+                    closeButton.addActionListener(e -> dialog.dispose());
+
+                    JPanel buttonPanel = new JPanel();
+                    buttonPanel.add(closeButton);
+                    dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+                    dialog.setSize(400, 500);
+                    dialog.setLocationRelativeTo(this);
+                    dialog.setVisible(true);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error viewing group members: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
