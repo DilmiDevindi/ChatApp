@@ -99,6 +99,13 @@ public class Login extends JFrame {
                 login();
             }
         });
+
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openRegisterForm();
+            }
+        });
 }
 
 
