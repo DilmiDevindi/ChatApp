@@ -552,3 +552,54 @@ public class ChatLauncher extends JFrame implements ChatObserver {
             e.printStackTrace();
         }
     }
+    /**
+     * Load the list of groups.
+     */
+    private void loadGroups() {
+        try {
+            List<ChatGrp> groups = chatService.getUserGroups(currentUser.getUsername());
+            groupListModel.clear();
+
+            for (ChatGrp group : groups) {
+                String groupName = group.getName();
+                groupListModel.addElement(groupName);
+
+                // Create a chat area for this group if it doesn't exist
+                if (!chatAreas.containsKey(groupName)) {
+                    // Create a new chat area for this group
+                    JEditorPane groupChatArea = new JEditorPane("text/html", "");
+                    groupChatArea.setEditable(false);
+                    groupChatArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+                    groupChatArea.setBackground(new Color(245, 245, 250)); // Same as backgroundColor
+                    groupChatArea.setFont(new Font("Arial", Font.PLAIN, 12));
+
+                    // Create a scroll pane for the chat area
+                    JScrollPane scrollPane = new JScrollPane(groupChatArea);
+                    scrollPane.setBorder(BorderFactory.createLineBorder(new Color(74, 101, 114), 1)); // primaryLightColor
+
+                    // Add to the card panel
+                    chatCardPanel.add(scrollPane, groupName);
+
+                    // Store in the map
+                    chatAreas.put(groupName, groupChatArea);
+
+                    // Load messages for this group in the background
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            List<ChatMsg> messages = chatService.getGroupMessages(groupName);
+                            displayMessages(messages, groupChatArea);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error loading groups: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
