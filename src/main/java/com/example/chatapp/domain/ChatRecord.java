@@ -66,4 +66,27 @@ public class ChatRecord implements Serializable {
     public void setChatName(String chatName) {
         this.chatName = chatName;
     }
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public Date getStopTime() {
+        return stopTime;
+    }
+
+    public void setStopTime(Date stopTime) {
+        this.stopTime = stopTime;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 }
