@@ -13,6 +13,24 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class Register extends JFrame {}
+public class Register extends JFrame {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JPasswordField confirmPasswordField;
+    private JTextField emailField;
+    private JTextField nickNameField;
+    private JTextField profilePictureField;
+    private JButton profilePictureButton;
+    private JButton registerButton;
+    private JButton backButton;
+    private JLabel statusLabel;
+    private String selectedProfilePicture = "default.png";
+
+    private static final String USER_SERVICE_NAME = "UserService";
+    private static final int RMI_PORT = 1099;
+    private static final String RMI_HOST = "localhost";
+
+
+}
 
 
