@@ -331,6 +331,15 @@ public class Register extends JFrame {
             return false;
         }
     }
+
+    /**
+     * Return to the login screen.
+     */
+    private void backToLogin() {
+        dispose(); // Close registration window
+        SwingUtilities.invokeLater(() -> {
+            new Login().setVisible(true);
+        });
     }
 }
 
