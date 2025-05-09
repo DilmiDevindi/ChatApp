@@ -167,6 +167,22 @@ public class Register extends JFrame {
         panel.add(statusLabel, gbc);
 
         add(panel);
+
+        // Add action listeners
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                register();
+            }
+        });
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                backToLogin();
+            }
+        });
+    }
     }
 }
 
