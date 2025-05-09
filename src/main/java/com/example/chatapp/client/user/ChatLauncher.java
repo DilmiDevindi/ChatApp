@@ -425,8 +425,305 @@ public class ChatLauncher extends JFrame implements ChatObserver {
     }
 
     /**
-     * View members of a group without selecting it.
+     * Update the user's profile with an enhanced UI.
      */
+    private void updateProfile() {
+        try {
+            // Define color scheme for the profile update form
+            Color primaryColor = new Color(52, 73, 85);      // #344955 - Dark blue
+            Color primaryLightColor = new Color(74, 101, 114); // #4A6572 - Medium blue
+            Color primaryDarkColor = new Color(35, 47, 52);   // #232F34 - Very dark blue
+            Color secondaryColor = new Color(249, 170, 51);   // #F9AA33 - Orange
+            Color accentColor = new Color(255, 87, 34);      // #FF5722 - Deep orange
+            Color backgroundColor = new Color(245, 245, 250);  // Light background
+            Color textColor = new Color(33, 33, 33);          // Dark text
+            Color fieldBackground = new Color(255, 255, 255); // White for input fields
+
+            // Create a panel for the profile update form with a more appealing layout
+            JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+            mainPanel.setBackground(backgroundColor);
+            mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            // Add a header panel with title
+            JPanel headerPanel = new JPanel(new BorderLayout());
+            headerPanel.setBackground(primaryColor);
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+            JLabel titleLabel = new JLabel("Update Your Profile");
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+            titleLabel.setForeground(Color.WHITE);
+            headerPanel.add(titleLabel, BorderLayout.WEST);
+
+            // Add user icon to header
+            String userInitial = currentUser.getUsername().substring(0, 1).toUpperCase();
+            JLabel userIconLabel = new JLabel(userInitial);
+            userIconLabel.setFont(new Font("Arial", Font.BOLD, 18));
+            userIconLabel.setForeground(Color.WHITE);
+            userIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            userIconLabel.setPreferredSize(new Dimension(36, 36));
+            userIconLabel.setOpaque(true);
+            userIconLabel.setBackground(secondaryColor);
+            userIconLabel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+            headerPanel.add(userIconLabel, BorderLayout.EAST);
+
+            mainPanel.add(headerPanel, BorderLayout.NORTH);
+
+            // Create form panel
+            JPanel formPanel = new JPanel(new GridBagLayout());
+            formPanel.setBackground(backgroundColor);
+            formPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(8, 8, 8, 8);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+
+            // Current user info
+            ChatUser user = userService.getUserByUsername(currentUser.getUsername());
+
+            // Username field (read-only)
+            JLabel usernameLabel = new JLabel("User Name:");
+            usernameLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            usernameLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            formPanel.add(usernameLabel, gbc);
+
+            JTextField usernameField = new JTextField(user.getUsername(), 20);
+            usernameField.setEditable(false);
+            usernameField.setBackground(new Color(240, 240, 240));
+            usernameField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            usernameField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.weightx = 1.0;
+            formPanel.add(usernameField, gbc);
+
+            // Password field
+            JLabel passwordLabel = new JLabel("New Password:");
+            passwordLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            passwordLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.weightx = 0.0;
+            formPanel.add(passwordLabel, gbc);
+
+            JPasswordField passwordField = new JPasswordField(20);
+            passwordField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            passwordField.setBackground(fieldBackground);
+            passwordField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 1;
+            gbc.weightx = 1.0;
+            formPanel.add(passwordField, gbc);
+
+            // Password hint
+            JLabel passwordHintLabel = new JLabel("Leave blank to keep current password");
+            passwordHintLabel.setFont(new Font("Arial", Font.ITALIC, 10));
+            passwordHintLabel.setForeground(primaryLightColor);
+            gbc.gridx = 1;
+            gbc.gridy = 2;
+            gbc.weightx = 1.0;
+            formPanel.add(passwordHintLabel, gbc);
+
+            // Nick name field
+            JLabel nickNameLabel = new JLabel("Nick Name:");
+            nickNameLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            nickNameLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            gbc.weightx = 0.0;
+            formPanel.add(nickNameLabel, gbc);
+
+            JTextField nickNameField = new JTextField(user.getNickName(), 20);
+            nickNameField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            nickNameField.setBackground(fieldBackground);
+            nickNameField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 3;
+            gbc.weightx = 1.0;
+            formPanel.add(nickNameField, gbc);
+
+            // Profile picture field
+            JLabel profilePictureLabel = new JLabel("Profile Picture:");
+            profilePictureLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            profilePictureLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 4;
+            gbc.weightx = 0.0;
+            formPanel.add(profilePictureLabel, gbc);
+
+            JPanel picturePanel = new JPanel(new BorderLayout(5, 0));
+            picturePanel.setBackground(backgroundColor);
+
+            JTextField profilePictureField = new JTextField(user.getProfilePicture(), 15);
+            profilePictureField.setEditable(false);
+            profilePictureField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            profilePictureField.setBackground(new Color(240, 240, 240));
+            profilePictureField.setFont(new Font("Arial", Font.PLAIN, 12));
+
+            JButton profilePictureButton = new JButton("Browse...");
+            profilePictureButton.setBackground(secondaryColor);
+            profilePictureButton.setForeground(Color.WHITE);
+            profilePictureButton.setFont(new Font("Arial", Font.BOLD, 12));
+            profilePictureButton.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+            profilePictureButton.setFocusPainted(false);
+
+            picturePanel.add(profilePictureField, BorderLayout.CENTER);
+            picturePanel.add(profilePictureButton, BorderLayout.EAST);
+
+            gbc.gridx = 1;
+            gbc.gridy = 4;
+            gbc.weightx = 1.0;
+            formPanel.add(picturePanel, gbc);
+
+            mainPanel.add(formPanel, BorderLayout.CENTER);
+
+            // Add buttons panel at the bottom
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            buttonPanel.setBackground(backgroundColor);
+
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setBackground(Color.LIGHT_GRAY);
+            cancelButton.setForeground(Color.BLACK);
+            cancelButton.setFont(new Font("Arial", Font.BOLD, 12));
+            cancelButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+            cancelButton.setFocusPainted(false);
+
+            JButton saveButton = new JButton("Save Changes");
+            saveButton.setBackground(accentColor);
+            saveButton.setForeground(Color.WHITE);
+            saveButton.setFont(new Font("Arial", Font.BOLD, 12));
+            saveButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+            saveButton.setFocusPainted(false);
+
+            buttonPanel.add(cancelButton);
+            buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+            buttonPanel.add(saveButton);
+
+            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+            // Profile picture selection
+            final String[] selectedProfilePicture = {user.getProfilePicture()};
+            profilePictureButton.addActionListener(e -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select Profile Picture");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(java.io.File f) {
+                        return f.isDirectory() || f.getName().toLowerCase().endsWith(".jpg") ||
+                                f.getName().toLowerCase().endsWith(".jpeg") ||
+                                f.getName().toLowerCase().endsWith(".png") ||
+                                f.getName().toLowerCase().endsWith(".gif");
+                    }
+                    public String getDescription() {
+                        return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+                    }
+                });
+
+                int result = fileChooser.showOpenDialog(ChatLauncher.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    java.io.File selectedFile = fileChooser.getSelectedFile();
+                    selectedProfilePicture[0] = selectedFile.getAbsolutePath();
+                    profilePictureField.setText(selectedProfilePicture[0]);
+                }
+            });
+
+            // Create a custom dialog
+            JDialog dialog = new JDialog(this, "Update Profile", true);
+            dialog.setContentPane(mainPanel);
+            dialog.setSize(500, 400);
+            dialog.setLocationRelativeTo(this);
+            dialog.setResizable(false);
+
+            // Add action listeners to buttons
+            cancelButton.addActionListener(e -> dialog.dispose());
+
+            final boolean[] updateConfirmed = {false};
+            saveButton.addActionListener(e -> {
+                updateConfirmed[0] = true;
+                dialog.dispose();
+            });
+
+            // Show the dialog
+            dialog.setVisible(true);
+
+            // Process the result if save was clicked
+            if (updateConfirmed[0]) {
+                // Get the values
+                String newPassword = new String(passwordField.getPassword());
+                String newNickName = nickNameField.getText().trim();
+                String newProfilePicture = selectedProfilePicture[0];
+
+                // Update the profile
+                ChatUser updatedUser = userService.updateProfile(
+                        currentUser.getUsername(),
+                        newPassword.isEmpty() ? null : newPassword,
+                        null, // Not updating email
+                        newNickName,
+                        newProfilePicture
+                );
+
+                // Update the current user
+                currentUser.setNickName(updatedUser.getNickName());
+                currentUser.setProfilePicture(updatedUser.getProfilePicture());
+
+                // Show success message with styled dialog
+                JPanel successPanel = new JPanel(new BorderLayout(10, 10));
+                successPanel.setBackground(backgroundColor);
+                successPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+                JLabel successIcon = new JLabel("✓");
+                successIcon.setFont(new Font("Arial", Font.BOLD, 48));
+                successIcon.setForeground(new Color(76, 175, 80)); // Green color
+                successIcon.setHorizontalAlignment(SwingConstants.CENTER);
+
+                JLabel successMessage = new JLabel("Profile updated successfully!");
+                successMessage.setFont(new Font("Arial", Font.BOLD, 16));
+                successMessage.setForeground(primaryDarkColor);
+                successMessage.setHorizontalAlignment(SwingConstants.CENTER);
+
+                successPanel.add(successIcon, BorderLayout.CENTER);
+                successPanel.add(successMessage, BorderLayout.SOUTH);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        successPanel,
+                        "Success",
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+                // Refresh the UI to reflect changes
+                loadUsers();
+                loadGroups();
+
+                if (updatedUser == null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to update profile",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error updating profile: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();}
+
+        }
+
+        /**
+         * View members of a group without selecting it.
+         */
     private void viewGroupMembers() {
         try {
             // Get groups the user is a member of
