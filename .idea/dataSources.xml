@@ -4,7 +4,7 @@
     <data-source source="LOCAL" name="chatdb@localhost" uuid="28c85b8b-0c87-4fca-8cef-f15eab0a4a15">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://localhost:3306/chatdb</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
@@ -43,7 +43,7 @@ C:/Users/kasun/Music/chatApp/src/main/resources/hibernate.cfg.xml</remarks>
     <data-source source="LOCAL" name="chatdb@localhost [2]" uuid="f5fba121-7bf3-4ca2-81af-f2ba1c9aa10a">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://localhost:3306/chatdb</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.host.port" />
