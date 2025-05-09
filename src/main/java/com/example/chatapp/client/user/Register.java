@@ -107,6 +107,18 @@ public class Register extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 6;
         panel.add(profilePictureLabel, gbc);
+
+        JPanel picturePanel = new JPanel(new BorderLayout());
+        profilePictureField = new JTextField(15);
+        profilePictureField.setEditable(false);
+        profilePictureField.setText("default.png");
+        profilePictureButton = new JButton("Browse...");
+        picturePanel.add(profilePictureField, BorderLayout.CENTER);
+        picturePanel.add(profilePictureButton, BorderLayout.EAST);
+
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        panel.add(picturePanel, gbc);
     }
 }
 
