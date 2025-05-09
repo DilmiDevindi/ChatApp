@@ -183,6 +183,67 @@ public class Register extends JFrame {
             }
         });
     }
+
+    /**
+     * Attempt to register a new user with the provided information.
+     */
+    private void register() {
+        String username = usernameField.getText().trim();
+        String password = new String(passwordField.getPassword());
+        String confirmPassword = new String(confirmPasswordField.getPassword());
+        String email = emailField.getText().trim();
+        String nickName = nickNameField.getText().trim();
+        String profilePicture = selectedProfilePicture;
+
+        // Validate input
+        if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || email.isEmpty()) {
+            statusLabel.setText("All fields are required");
+            return;
+        }
+
+        // Nick name is optional, use username if not provided
+        if (nickName.isEmpty()) {
+            nickName = username;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            statusLabel.setText("Passwords do not match");
+            return;
+        }
+
+        // Check if server is running, start it if not
+        if (!ensureServerRunning()) {
+            statusLabel.setText("Could not connect to server. Please try again later.");
+            return;
+        }
+
+        try {
+            Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+            UserService userService = (UserService) registry.lookup(USER_SERVICE_NAME);
+
+            // Check if username is available
+            if (!userService.isUsernameAvailable(username)) {
+                statusLabel.setText("Username already taken");
+                return;
+            }
+
+            // Register the user
+            ChatUser user = userService.register(username, password, email, nickName, profilePicture);
+
+            if (user != null) {
+                JOptionPane.showMessageDialog(this,
+                        "Registration successful! You can now log in.",
+                        "Registration Complete",
+                        JOptionPane.INFORMATION_MESSAGE);
+                backToLogin();
+            } else {
+                statusLabel.setText("Registration failed. Please try again.");
+            }
+        } catch (RemoteException | NotBoundException e) {
+            statusLabel.setText("Error connecting to server: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     }
 }
 
