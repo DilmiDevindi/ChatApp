@@ -425,8 +425,14 @@ public class ChatLauncher extends JFrame implements ChatObserver {
     }
 
     /**
-     * View members of a group without selecting it.
+     * Update the user's profile with an enhanced UI.
      */
+    private void updateProfile() {
+    }
+
+        /**
+         * View members of a group without selecting it.
+         */
     private void viewGroupMembers() {
         try {
             // Get groups the user is a member of
