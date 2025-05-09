@@ -89,4 +89,16 @@ public class ChatRecord implements Serializable {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
+
+    @Override
+    public String toString() {
+        return "ChatRecord{" +
+                "id=" + id +
+                ", chatId='" + chatId + '\'' +
+                ", chatName='" + chatName + '\'' +
+                ", filePath='" + filePath + '\'' +
+                ", stopTime=" + stopTime +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }
