@@ -29,4 +29,9 @@ public class ChatRecord implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
+    // Default constructor required by Hibernate
+    public ChatRecord() {
+        this.createdAt = new Date();
+    }
+
 }
