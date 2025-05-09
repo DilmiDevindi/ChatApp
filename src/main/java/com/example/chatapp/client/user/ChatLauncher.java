@@ -428,7 +428,47 @@ public class ChatLauncher extends JFrame implements ChatObserver {
      * Update the user's profile with an enhanced UI.
      */
     private void updateProfile() {
-    }
+        try {
+            // Define color scheme for the profile update form
+            Color primaryColor = new Color(52, 73, 85);      // #344955 - Dark blue
+            Color primaryLightColor = new Color(74, 101, 114); // #4A6572 - Medium blue
+            Color primaryDarkColor = new Color(35, 47, 52);   // #232F34 - Very dark blue
+            Color secondaryColor = new Color(249, 170, 51);   // #F9AA33 - Orange
+            Color accentColor = new Color(255, 87, 34);      // #FF5722 - Deep orange
+            Color backgroundColor = new Color(245, 245, 250);  // Light background
+            Color textColor = new Color(33, 33, 33);          // Dark text
+            Color fieldBackground = new Color(255, 255, 255); // White for input fields
+
+            // Create a panel for the profile update form with a more appealing layout
+            JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+            mainPanel.setBackground(backgroundColor);
+            mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+            // Add a header panel with title
+            JPanel headerPanel = new JPanel(new BorderLayout());
+            headerPanel.setBackground(primaryColor);
+            headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+            JLabel titleLabel = new JLabel("Update Your Profile");
+            titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+            titleLabel.setForeground(Color.WHITE);
+            headerPanel.add(titleLabel, BorderLayout.WEST);
+
+            // Add user icon to header
+            String userInitial = currentUser.getUsername().substring(0, 1).toUpperCase();
+            JLabel userIconLabel = new JLabel(userInitial);
+            userIconLabel.setFont(new Font("Arial", Font.BOLD, 18));
+            userIconLabel.setForeground(Color.WHITE);
+            userIconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            userIconLabel.setPreferredSize(new Dimension(36, 36));
+            userIconLabel.setOpaque(true);
+            userIconLabel.setBackground(secondaryColor);
+            userIconLabel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+            headerPanel.add(userIconLabel, BorderLayout.EAST);
+
+            mainPanel.add(headerPanel, BorderLayout.NORTH);
+
+        }
 
         /**
          * View members of a group without selecting it.
