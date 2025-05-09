@@ -244,6 +244,35 @@ public class Register extends JFrame {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Ensures the server is running, starts it if necessary.
+     *
+     * @return true if server is running or was successfully started, false otherwise
+     */
+    private boolean ensureServerRunning() {
+        try {
+            // Try to connect to the server
+            Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+            registry.lookup(USER_SERVICE_NAME);
+            return true;
+        } catch (RemoteException | NotBoundException e) {
+            // Server not running, ask if user wants to start it
+            int response = JOptionPane.showConfirmDialog(
+                    this,
+                    "Server is not running. Would you like to start it?",
+                    "Start Server",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+            );
+
+            if (response == JOptionPane.YES_OPTION) {
+                return startServer();
+            } else {
+                return false;
+            }
+        }
+    }
     }
 }
 
