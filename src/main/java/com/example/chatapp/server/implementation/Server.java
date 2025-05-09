@@ -94,3 +94,141 @@ public class Server implements ChatService, UserService, SubscribeService, LogSe
             e.printStackTrace();
         }
     }
+
+    /**
+     * Ensures that the database exists, creating it if necessary.
+     * Also tests the MySQL connection and provides diagnostic information.
+     */
+    private void ensureDatabaseExists() {
+        String jdbcUrl = "jdbc:mysql://localhost:3306/";
+        String username = "root";
+        String password = "1234";
+        String dbName = "chatdb";
+
+        try {
+            // Load the MySQL JDBC driver explicitly
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("MySQL JDBC Driver loaded successfully.");
+
+            // Test connection to MySQL server
+            System.out.println("Attempting to connect to MySQL server at " + jdbcUrl);
+            java.sql.Connection connection = java.sql.DriverManager.getConnection(jdbcUrl, username, password);
+            System.out.println("Connected to MySQL server successfully.");
+
+            java.sql.Statement statement = connection.createStatement();
+
+            // Create database if it doesn't exist
+            System.out.println("Checking if database '" + dbName + "' exists...");
+            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + dbName);
+            System.out.println("Database '" + dbName + "' ensured.");
+
+            // Test connection to the specific database
+            String fullJdbcUrl = jdbcUrl + dbName;
+            System.out.println("Testing connection to database: " + fullJdbcUrl);
+            java.sql.Connection dbConnection = java.sql.DriverManager.getConnection(fullJdbcUrl, username, password);
+            System.out.println("Successfully connected to database: " + dbName);
+            dbConnection.close();
+
+            // Close resources
+            statement.close();
+            connection.close();
+            System.out.println("Database connection test completed successfully.");
+        } catch (ClassNotFoundException e) {
+            System.err.println("ERROR: MySQL JDBC Driver not found. Please ensure the MySQL connector is in the classpath.");
+            System.err.println("Error details: " + e.getMessage());
+            e.printStackTrace();
+        } catch (java.sql.SQLException e) {
+            System.err.println("ERROR: Database connection failed.");
+            System.err.println("Error code: " + e.getErrorCode());
+            System.err.println("SQL State: " + e.getSQLState());
+            System.err.println("Error message: " + e.getMessage());
+            System.err.println("Please ensure MySQL server is running on localhost:3306 and credentials are correct.");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("ERROR: Unexpected error ensuring database exists: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initialize the database with an admin user if none exists.
+     * Also ensures that the chat_records table is created.
+     */
+    private void initializeDatabase() {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+
+            // Check if admin user exists
+            Query<ChatUser> query = session.createQuery("FROM ChatUser WHERE isAdmin = true", ChatUser.class);
+            List<ChatUser> admins = query.list();
+
+            if (admins.isEmpty()) {
+                // Create admin user
+                ChatUser admin = new ChatUser("admin", "admin123", "admin@example.com", true);
+                session.persist(admin);
+                System.out.println("Admin user created: " + admin.getUsername());
+            }
+
+            // Ensure chat_records table is created by checking if it exists
+            try {
+                Query<Long> recordQuery = session.createQuery(
+                        "SELECT COUNT(c) FROM ChatRecord c", Long.class);
+                recordQuery.uniqueResult();
+                System.out.println("chat_records table exists");
+            } catch (Exception e) {
+                System.out.println("Creating chat_records table...");
+                // Create a test record to ensure the table is created
+                String testChatId = "test-" + UUID.randomUUID().toString();
+                ChatRecord testRecord = new ChatRecord(testChatId, "Test Chat", "test-path", new Date());
+                session.persist(testRecord);
+                System.out.println("Test chat record created with ID: " + testRecord.getId());
+
+                // Remove the test record
+                session.remove(testRecord);
+                System.out.println("Test chat record removed");
+            }
+
+            transaction.commit();
+        } catch (Exception e) {
+            System.err.println("Error initializing database: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Start the RMI server.
+     */
+    public void start() {
+        try {
+            // Create and export remote objects
+            ChatService chatService = (ChatService) UnicastRemoteObject.exportObject(this, 0);
+            UserService userService = (UserService) chatService; // no need to export again
+            SubscribeService subscribeService = (SubscribeService) chatService;
+            LogService logService = (LogService) chatService;
+
+            // Create or get the registry
+            Registry registry = null;
+            try {
+                registry = LocateRegistry.createRegistry(RMI_PORT);
+                System.out.println("RMI registry created on port " + RMI_PORT);
+            } catch (RemoteException e) {
+                registry = LocateRegistry.getRegistry(RMI_PORT);
+                System.out.println("RMI registry found on port " + RMI_PORT);
+            }
+
+            // Bind the remote objects
+            registry.rebind(CHAT_SERVICE_NAME, chatService);
+            registry.rebind(USER_SERVICE_NAME, userService);
+            registry.rebind(SUBSCRIBE_SERVICE_NAME, subscribeService);
+            registry.rebind(LOG_SERVICE_NAME, logService);
+
+            System.out.println("Server started. Services registered:");
+            System.out.println("- " + CHAT_SERVICE_NAME);
+            System.out.println("- " + USER_SERVICE_NAME);
+            System.out.println("- " + SUBSCRIBE_SERVICE_NAME);
+            System.out.println("- " + LOG_SERVICE_NAME);
+        } catch (Exception e) {
+            System.err.println("Server exception: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
