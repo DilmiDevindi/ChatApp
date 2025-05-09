@@ -8,3 +8,25 @@ import java.util.Date;
 @Table(name = "chat_records")
 public class ChatRecord implements Serializable {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "chat_id", nullable = false, unique = true)
+    private String chatId;
+
+    @Column(name = "chat_name", nullable = false)
+    private String chatName;
+
+    @Column(name = "file_path", nullable = false)
+    private String filePath;
+
+    @Column(name = "stop_time", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date stopTime;
+
+    @Column(name = "created_at", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+
+}
