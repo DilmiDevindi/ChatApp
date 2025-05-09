@@ -653,7 +653,71 @@ public class ChatLauncher extends JFrame implements ChatObserver {
                 dialog.dispose();
             });
 
+            // Show the dialog
+            dialog.setVisible(true);
 
+            // Process the result if save was clicked
+            if (updateConfirmed[0]) {
+                // Get the values
+                String newPassword = new String(passwordField.getPassword());
+                String newNickName = nickNameField.getText().trim();
+                String newProfilePicture = selectedProfilePicture[0];
+
+                // Update the profile
+                ChatUser updatedUser = userService.updateProfile(
+                        currentUser.getUsername(),
+                        newPassword.isEmpty() ? null : newPassword,
+                        null, // Not updating email
+                        newNickName,
+                        newProfilePicture
+                );
+
+                // Update the current user
+                currentUser.setNickName(updatedUser.getNickName());
+                currentUser.setProfilePicture(updatedUser.getProfilePicture());
+
+                // Show success message with styled dialog
+                JPanel successPanel = new JPanel(new BorderLayout(10, 10));
+                successPanel.setBackground(backgroundColor);
+                successPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+                JLabel successIcon = new JLabel("✓");
+                successIcon.setFont(new Font("Arial", Font.BOLD, 48));
+                successIcon.setForeground(new Color(76, 175, 80)); // Green color
+                successIcon.setHorizontalAlignment(SwingConstants.CENTER);
+
+                JLabel successMessage = new JLabel("Profile updated successfully!");
+                successMessage.setFont(new Font("Arial", Font.BOLD, 16));
+                successMessage.setForeground(primaryDarkColor);
+                successMessage.setHorizontalAlignment(SwingConstants.CENTER);
+
+                successPanel.add(successIcon, BorderLayout.CENTER);
+                successPanel.add(successMessage, BorderLayout.SOUTH);
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        successPanel,
+                        "Success",
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+                // Refresh the UI to reflect changes
+                loadUsers();
+                loadGroups();
+
+                if (updatedUser == null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to update profile",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (RemoteException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error updating profile: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();}
 
         }
 
