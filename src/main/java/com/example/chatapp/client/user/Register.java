@@ -146,6 +146,7 @@ public class Register extends JFrame {
                     profilePictureField.setText(selectedProfilePicture);
                 }
             }
+        });
     }
 }
 
