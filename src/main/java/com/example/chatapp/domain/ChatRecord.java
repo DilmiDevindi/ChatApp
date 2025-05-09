@@ -66,7 +66,6 @@ public class ChatRecord implements Serializable {
     public void setChatName(String chatName) {
         this.chatName = chatName;
     }
-
     public String getFilePath() {
         return filePath;
     }
