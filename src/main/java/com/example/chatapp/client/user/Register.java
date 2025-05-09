@@ -273,6 +273,64 @@ public class Register extends JFrame {
             }
         }
     }
+    /**
+     * Start the server in a separate thread.
+     *
+     * @return true if server was successfully started, false otherwise
+     */
+    private boolean startServer() {
+        try {
+            statusLabel.setText("Starting server...");
+
+            Thread serverThread = new Thread(() -> {
+                try {
+                    System.out.println("Starting server...");
+                    Server server = new Server();
+                    server.start();
+                    System.out.println("Server started successfully.");
+                } catch (Exception e) {
+                    System.err.println("Error starting server: " + e.getMessage());
+                    e.printStackTrace();
+                    SwingUtilities.invokeLater(() -> {
+                        statusLabel.setText("Failed to start server: " + e.getMessage());
+                    });
+                }
+            });
+
+            serverThread.setDaemon(true);
+            serverThread.start();
+
+            // Wait for server to start by checking if the registry is accessible
+            System.out.println("Waiting for server to start...");
+            boolean serverStarted = false;
+            int maxRetries = 30; // Maximum number of retries (30 * 500ms = 15 seconds)
+            int retries = 0;
+
+            while (!serverStarted && retries < maxRetries) {
+                try {
+                    Thread.sleep(500); // Wait 500ms between checks
+                    Registry registry = LocateRegistry.getRegistry(RMI_HOST, RMI_PORT);
+                    registry.lookup(USER_SERVICE_NAME);
+                    serverStarted = true;
+                    System.out.println("Server is now running.");
+                    statusLabel.setText("Server started successfully.");
+                } catch (RemoteException | NotBoundException e) {
+                    retries++;
+                    System.out.println("Waiting for server... (" + retries + "/" + maxRetries + ")");
+                    statusLabel.setText("Waiting for server... (" + retries + "/" + maxRetries + ")");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+
+            return serverStarted;
+        } catch (Exception e) {
+            statusLabel.setText("Error starting server: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
     }
 }
 
