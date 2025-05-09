@@ -33,7 +33,12 @@ public class Register extends JFrame {
     /**
      * Constructor initializes the registration UI.
      */
-    public Register() {}
+    public Register() {
+        setTitle("Chat Application - Register");
+        setSize(450, 350);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+    }
 }
 
 
