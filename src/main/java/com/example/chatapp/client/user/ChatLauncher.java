@@ -468,6 +468,125 @@ public class ChatLauncher extends JFrame implements ChatObserver {
 
             mainPanel.add(headerPanel, BorderLayout.NORTH);
 
+            // Create form panel
+            JPanel formPanel = new JPanel(new GridBagLayout());
+            formPanel.setBackground(backgroundColor);
+            formPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
+
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(8, 8, 8, 8);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+
+            // Current user info
+            ChatUser user = userService.getUserByUsername(currentUser.getUsername());
+
+            // Username field (read-only)
+            JLabel usernameLabel = new JLabel("User Name:");
+            usernameLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            usernameLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            formPanel.add(usernameLabel, gbc);
+
+            JTextField usernameField = new JTextField(user.getUsername(), 20);
+            usernameField.setEditable(false);
+            usernameField.setBackground(new Color(240, 240, 240));
+            usernameField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            usernameField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.weightx = 1.0;
+            formPanel.add(usernameField, gbc);
+
+            // Password field
+            JLabel passwordLabel = new JLabel("New Password:");
+            passwordLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            passwordLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.weightx = 0.0;
+            formPanel.add(passwordLabel, gbc);
+
+            JPasswordField passwordField = new JPasswordField(20);
+            passwordField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            passwordField.setBackground(fieldBackground);
+            passwordField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 1;
+            gbc.weightx = 1.0;
+            formPanel.add(passwordField, gbc);
+
+            // Password hint
+            JLabel passwordHintLabel = new JLabel("Leave blank to keep current password");
+            passwordHintLabel.setFont(new Font("Arial", Font.ITALIC, 10));
+            passwordHintLabel.setForeground(primaryLightColor);
+            gbc.gridx = 1;
+            gbc.gridy = 2;
+            gbc.weightx = 1.0;
+            formPanel.add(passwordHintLabel, gbc);
+
+            // Nick name field
+            JLabel nickNameLabel = new JLabel("Nick Name:");
+            nickNameLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            nickNameLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            gbc.weightx = 0.0;
+            formPanel.add(nickNameLabel, gbc);
+
+            JTextField nickNameField = new JTextField(user.getNickName(), 20);
+            nickNameField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            nickNameField.setBackground(fieldBackground);
+            nickNameField.setFont(new Font("Arial", Font.PLAIN, 12));
+            gbc.gridx = 1;
+            gbc.gridy = 3;
+            gbc.weightx = 1.0;
+            formPanel.add(nickNameField, gbc);
+
+            // Profile picture field
+            JLabel profilePictureLabel = new JLabel("Profile Picture:");
+            profilePictureLabel.setFont(new Font("Arial", Font.BOLD, 12));
+            profilePictureLabel.setForeground(primaryDarkColor);
+            gbc.gridx = 0;
+            gbc.gridy = 4;
+            gbc.weightx = 0.0;
+            formPanel.add(profilePictureLabel, gbc);
+
+            JPanel picturePanel = new JPanel(new BorderLayout(5, 0));
+            picturePanel.setBackground(backgroundColor);
+
+            JTextField profilePictureField = new JTextField(user.getProfilePicture(), 15);
+            profilePictureField.setEditable(false);
+            profilePictureField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(primaryLightColor, 1),
+                    BorderFactory.createEmptyBorder(8, 8, 8, 8)));
+            profilePictureField.setBackground(new Color(240, 240, 240));
+            profilePictureField.setFont(new Font("Arial", Font.PLAIN, 12));
+
+            JButton profilePictureButton = new JButton("Browse...");
+            profilePictureButton.setBackground(secondaryColor);
+            profilePictureButton.setForeground(Color.WHITE);
+            profilePictureButton.setFont(new Font("Arial", Font.BOLD, 12));
+            profilePictureButton.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+            profilePictureButton.setFocusPainted(false);
+
+            picturePanel.add(profilePictureField, BorderLayout.CENTER);
+            picturePanel.add(profilePictureButton, BorderLayout.EAST);
+
+            gbc.gridx = 1;
+            gbc.gridy = 4;
+            gbc.weightx = 1.0;
+            formPanel.add(picturePanel, gbc);
+
+            mainPanel.add(formPanel, BorderLayout.CENTER);
+
         }
 
         /**
