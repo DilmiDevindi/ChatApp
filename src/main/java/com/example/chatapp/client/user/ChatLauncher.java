@@ -637,6 +637,23 @@ public class ChatLauncher extends JFrame implements ChatObserver {
                 }
             });
 
+            // Create a custom dialog
+            JDialog dialog = new JDialog(this, "Update Profile", true);
+            dialog.setContentPane(mainPanel);
+            dialog.setSize(500, 400);
+            dialog.setLocationRelativeTo(this);
+            dialog.setResizable(false);
+
+            // Add action listeners to buttons
+            cancelButton.addActionListener(e -> dialog.dispose());
+
+            final boolean[] updateConfirmed = {false};
+            saveButton.addActionListener(e -> {
+                updateConfirmed[0] = true;
+                dialog.dispose();
+            });
+
+
 
         }
 
