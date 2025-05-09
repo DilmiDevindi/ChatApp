@@ -587,6 +587,57 @@ public class ChatLauncher extends JFrame implements ChatObserver {
 
             mainPanel.add(formPanel, BorderLayout.CENTER);
 
+            // Add buttons panel at the bottom
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            buttonPanel.setBackground(backgroundColor);
+
+            JButton cancelButton = new JButton("Cancel");
+            cancelButton.setBackground(Color.LIGHT_GRAY);
+            cancelButton.setForeground(Color.BLACK);
+            cancelButton.setFont(new Font("Arial", Font.BOLD, 12));
+            cancelButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+            cancelButton.setFocusPainted(false);
+
+            JButton saveButton = new JButton("Save Changes");
+            saveButton.setBackground(accentColor);
+            saveButton.setForeground(Color.WHITE);
+            saveButton.setFont(new Font("Arial", Font.BOLD, 12));
+            saveButton.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
+            saveButton.setFocusPainted(false);
+
+            buttonPanel.add(cancelButton);
+            buttonPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+            buttonPanel.add(saveButton);
+
+            mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+            // Profile picture selection
+            final String[] selectedProfilePicture = {user.getProfilePicture()};
+            profilePictureButton.addActionListener(e -> {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select Profile Picture");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(java.io.File f) {
+                        return f.isDirectory() || f.getName().toLowerCase().endsWith(".jpg") ||
+                                f.getName().toLowerCase().endsWith(".jpeg") ||
+                                f.getName().toLowerCase().endsWith(".png") ||
+                                f.getName().toLowerCase().endsWith(".gif");
+                    }
+                    public String getDescription() {
+                        return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+                    }
+                });
+
+                int result = fileChooser.showOpenDialog(ChatLauncher.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    java.io.File selectedFile = fileChooser.getSelectedFile();
+                    selectedProfilePicture[0] = selectedFile.getAbsolutePath();
+                    profilePictureField.setText(selectedProfilePicture[0]);
+                }
+            });
+
+
         }
 
         /**
