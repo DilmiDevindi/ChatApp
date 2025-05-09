@@ -138,6 +138,14 @@ public class Register extends JFrame {
                         return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
                     }
                 });
+
+                int result = fileChooser.showOpenDialog(Register.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    java.io.File selectedFile = fileChooser.getSelectedFile();
+                    selectedProfilePicture = selectedFile.getName();
+                    profilePictureField.setText(selectedProfilePicture);
+                }
+            }
     }
 }
 
