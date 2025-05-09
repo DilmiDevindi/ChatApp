@@ -30,7 +30,10 @@ public class Register extends JFrame {
     private static final int RMI_PORT = 1099;
     private static final String RMI_HOST = "localhost";
 
-
+    /**
+     * Constructor initializes the registration UI.
+     */
+    public Register() {}
 }
 
 
