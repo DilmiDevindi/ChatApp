@@ -38,6 +38,75 @@ public class Register extends JFrame {
         setSize(450, 350);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        // Create components
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel titleLabel = new JLabel("Create New Account", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(titleLabel, gbc);
+
+        JLabel usernameLabel = new JLabel("Username:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(usernameLabel, gbc);
+
+        usernameField = new JTextField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(usernameField, gbc);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(passwordLabel, gbc);
+
+        passwordField = new JPasswordField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panel.add(passwordField, gbc);
+
+        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        panel.add(confirmPasswordLabel, gbc);
+
+        confirmPasswordField = new JPasswordField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        panel.add(confirmPasswordField, gbc);
+
+        JLabel emailLabel = new JLabel("Email:");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        panel.add(emailLabel, gbc);
+
+        emailField = new JTextField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        panel.add(emailField, gbc);
+
+        JLabel nickNameLabel = new JLabel("Nick Name:");
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        panel.add(nickNameLabel, gbc);
+
+        nickNameField = new JTextField(20);
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        panel.add(nickNameField, gbc);
+
+        JLabel profilePictureLabel = new JLabel("Profile Picture:");
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        panel.add(profilePictureLabel, gbc);
     }
 }
 
