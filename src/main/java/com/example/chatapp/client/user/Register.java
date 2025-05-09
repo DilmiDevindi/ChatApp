@@ -119,6 +119,25 @@ public class Register extends JFrame {
         gbc.gridx = 1;
         gbc.gridy = 6;
         panel.add(picturePanel, gbc);
+
+        // Add action listener for profile picture button
+        profilePictureButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setDialogTitle("Select Profile Picture");
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(java.io.File f) {
+                        return f.isDirectory() || f.getName().toLowerCase().endsWith(".jpg") ||
+                                f.getName().toLowerCase().endsWith(".jpeg") ||
+                                f.getName().toLowerCase().endsWith(".png") ||
+                                f.getName().toLowerCase().endsWith(".gif");
+                    }
+                    public String getDescription() {
+                        return "Image Files (*.jpg, *.jpeg, *.png, *.gif)";
+                    }
+                });
     }
 }
 
