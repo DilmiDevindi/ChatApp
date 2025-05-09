@@ -147,6 +147,26 @@ public class Register extends JFrame {
                 }
             }
         });
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        registerButton = new JButton("Register");
+        backButton = new JButton("Back to Login");
+        buttonPanel.add(registerButton);
+        buttonPanel.add(backButton);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        panel.add(buttonPanel, gbc);
+
+        statusLabel = new JLabel("", JLabel.CENTER);
+        statusLabel.setForeground(Color.RED);
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        panel.add(statusLabel, gbc);
+
+        add(panel);
     }
 }
 
