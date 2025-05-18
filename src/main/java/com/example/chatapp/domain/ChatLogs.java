@@ -19,6 +19,7 @@ public class ChatLogs implements Serializable {
     @Column(name = "action", nullable = false)
     private String action;
 
+
     @Column(name = "timestamp", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
@@ -136,3 +137,4 @@ public class ChatLogs implements Serializable {
                 '}';
     }
 }
+
